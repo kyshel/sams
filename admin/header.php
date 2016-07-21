@@ -13,8 +13,13 @@
 </head>
 
 <body>
+<div>this is header, 
+U R <?php echo $_SESSION['user_name']; ?>,
+Your Role is <?php echo $_SESSION['user_role']; ?>,
+<a href="login.php?logout">logout</a>
+</div>
 
-<nav class="navbar navbar-inverse navbar-fixed-top">
+<!-- <nav class="navbar navbar-inverse navbar-fixed-top">
   <div class="container-fluid">
   
     <div class="navbar-header">
@@ -35,5 +40,5 @@
     </div>
 
   </div>
-</nav>
+</nav> -->
 
