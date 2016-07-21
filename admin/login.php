@@ -1,5 +1,4 @@
 <?php
-
 require_once("functions.php");
 check_phpversion_for_hash();
 

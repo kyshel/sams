@@ -79,7 +79,7 @@ class Login
                         WHERE user_name = '" . $user_name . "' OR user_email = '" . $user_name . "';";
                 $result_of_login_check = $this->db_connection->query($sql);
 
-                $sql2 = "SELECT tea_name, tea_password
+                $sql2 = "SELECT tea_id, tea_name, tea_password
                         FROM teacher
                         WHERE tea_name = '" . $user_name . "';";
                 $result_of_login_check2 = $this->db_connection->query($sql2);
@@ -123,6 +123,8 @@ class Login
                         $_SESSION['user_name'] = $result_row->tea_name;
                         $_SESSION['user_role'] = 'teacher';
                         $_SESSION['user_login_status'] = 1;
+
+                        $_SESSION['tea_id'] = $result_row->tea_id;
 
                         //log add
                         //$action="登录系统";

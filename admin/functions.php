@@ -16,7 +16,7 @@ function exec_kickout_if_timeout(){
     }
         //set delay time,secs
     else{
-        $delay=5;
+        $delay=3600;
         if ($_SESSION['timeout'] + $delay < time()) {
             $_SESSION = array();
             session_destroy();
@@ -50,6 +50,36 @@ function check_phpversion_for_hash(){
 	    require_once("password_compatibility_library.php");
 	}
 }
+
+// generate a select course list that belong to logined teacher
+function teacher_get_own_course($tea_id){
+	global $db;
+	echo '<select name="region" required>';
+	
+	
+	$sql="SELECT course_name from course where course_code in(
+	SELECT course_code from project where tea_id = $tea_id
+	)";
+
+	// ** test if_condition is work ir not
+	// $sql="SELECT course_name from course where course_code in(
+	// SELECT course_code from project where tea_id = 0
+	// )";
+
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echo "<option>Please set your course first</option>";
+    } else {
+		while($row = $result->fetch_array(MYSQLI_ASSOC))
+		{		
+			echo "<option value='".$row['course_name']."'>" . $row['course_name'] . "</option>";
+		}
+	}
+
+	echo '</select>';
+
+}
+
 
 
 
