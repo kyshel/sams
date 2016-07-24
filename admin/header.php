@@ -29,6 +29,7 @@ Your Role is <?php echo $_SESSION['user_role']; ?>,
 <div>
 <a href="index.php">index</a>  
 <a href="add.php">add</a>  
+<a href="dev.php">dev</a> 
 </div>
 
 <hr>

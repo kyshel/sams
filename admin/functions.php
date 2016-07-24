@@ -147,6 +147,20 @@ function generate_stu_list($pro_id){
 	} else {
 
 		echo '<table class="table-bordered">';
+			echo '<tr>';
+				echo '<th>';
+				echo '学号';
+				echo '</th>';
+
+				echo '<th>';
+				echo '点名';
+				echo '</th>';
+
+				echo '<th>';
+				echo '备注';
+				echo '</th>';
+		echo '</tr>';
+
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
 			echo '<tr>';
 
@@ -161,6 +175,10 @@ function generate_stu_list($pro_id){
 			
 				echo '<td>';
 				make_a_switch('check'.$i,$row['stu_id'],$row['stu_name'],'42px','√','×','success','danger');
+				echo '</td>';
+
+				echo '<td>';
+				make_a_select_for_at_meta('at_meta'.$i);
 				echo '</td>';
 
 			echo '</tr>';
@@ -187,10 +205,18 @@ function make_a_switch($name,$value,$label_text,$label_width,$on_text,$off_text,
 
     data-on-color="'.$on_color.'" 
     data-off-color="'.$off_color.'" 
-     
+    
+    data-size="mini" 
     checked>';
 }
 
+
+function make_a_select_for_at_meta($name){
+	echo '<select name="'.$name.'" required>';
+		echo '<option value="无" selected>无</option>';
+		echo '<option value="请假">请假</option>';
+	echo '</select>';
+}
 
 function get_go_id($pro_id,$go_time){
 	global $db;
@@ -207,8 +233,110 @@ function get_go_id($pro_id,$go_time){
 function check_go_unique($pro_id,$go_time){
 	global $db;
 
-	echo "---wait to add check code---";
+	echo "<h1>---wait to add check code---</h1>";
 }
+
+
+
+function get_course_name_with_code($course_code){
+	global $db;
+
+	$sql="SELECT course_name
+	from course
+	where course_code = '$course_code' ";
+	$result = $db->query($sql);
+	$row = $result->fetch_array(MYSQLI_ASSOC);
+
+	return $row['course_name'];
+}
+
+function get_stu_name_with_id($stu_id){
+	global $db;
+
+	$sql="SELECT stu_name
+	from student
+	where stu_id = '$stu_id' ";
+	$result = $db->query($sql);
+	$row = $result->fetch_array(MYSQLI_ASSOC);
+
+	return $row['stu_name'];
+}
+
+function get_pro_detail_with_id($pro_id,&$stu_grade,&$stu_major,&$course_name){
+	global $db;
+
+	$sql="SELECT stu_grade,stu_major,course_code
+	from project
+	where pro_id = '$pro_id'";
+	$result = $db->query($sql);
+	$row = $result->fetch_array(MYSQLI_ASSOC);
+
+	$stu_grade=$row['stu_grade'];
+	$stu_major=$row['stu_major'];
+	$course_name=get_course_name_with_code($row['course_code']);
+}
+
+
+
+
+
+
+
+
+
+
+
+//****************** below are dev func *********************************
+
+function del_go($go_id){
+	global $db;
+
+	$sql="DELETE FROM go
+	WHERE go_id = '$go_id' ";
+	$db->query($sql) or die($db->error);
+
+	echo "<h1>del go with go_id success!</h1>";
+}
+
+function del_at_with_go_id($go_id){
+	global $db;
+
+	$sql="DELETE FROM attend
+	WHERE go_id = '$go_id' ";
+	$db->query($sql) or die($db->error);
+
+	echo "<h1>del at with go_id success!</h1>";
+}
+
+
+
+
+
+
+//---------------  global dev code ,reserve in production environment-------------
+
+function dev_var_dump($type){
+	if(DEV_MODE == 0){
+		return ;
+	}
+	echo '<p> >>>>>>>>> WARNING! dev_mode is open!<br>';
+
+	if($type == 'get'){
+		echo 'var_dump_get:';
+		var_dump($_GET);		
+	}
+	else if($type == 'post'){
+		echo 'var_dump_get:';
+		var_dump($_POST);
+	}
+
+
+	echo '<br> <<<<<<<<<< WARNING! dev_mode is open!</p>';
+
+
+}
+
+	
 
 
 
