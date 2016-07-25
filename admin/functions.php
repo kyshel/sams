@@ -16,17 +16,16 @@ function exec_kickout_if_timeout(){
     }
         //set delay time,secs
     else{
-        $delay=3600;
+        $delay=dev_delay();
         if ($_SESSION['timeout'] + $delay < time()) {
             $_SESSION = array();
             session_destroy();
-            // return a little feeedback message
+            //return a little feeedback message
             //echo "<div class='alert alert-success' role='alert'>由于长时间未操作，您已退出系统，请重新登录！</div>";
-            // session timed out
 
-            header("Location: login.php?timeout");
+            header("Location:login.php?timeout&redirect_to=" . urlencode($_SERVER['REQUEST_URI']));
             die();
-
+            
         } else {
             $cha=time()-$_SESSION['timeout'];
             $cha_div=$cha / 60 ;
@@ -250,6 +249,18 @@ function get_course_name_with_code($course_code){
 	return $row['course_name'];
 }
 
+function get_teacher_name_with_id($tea_id){
+	global $db;
+
+	$sql="SELECT tea_name
+	from teacher
+	where tea_id = '$tea_id' ";
+	$result = $db->query($sql);
+	$row = $result->fetch_array(MYSQLI_ASSOC);
+
+	return $row['tea_name'];
+}
+
 function get_stu_name_with_id($stu_id){
 	global $db;
 
@@ -276,6 +287,316 @@ function get_pro_detail_with_id($pro_id,&$stu_grade,&$stu_major,&$course_name){
 	$course_name=get_course_name_with_code($row['course_code']);
 }
 
+function showMenuAccordUserRole(){
+	$user_role=$_SESSION['user_role'];
+
+	if ($user_role == 'admin') {
+		showAdminMenu();
+	}elseif($user_role == 'teacher'){
+		showTeacherMenu();
+	}
+
+	
+}
+
+function showAdminMenu(){
+	echo '
+	<a href="index.php">index</a>  
+	<a href="manage_stu.php">manage_stu</a> 
+	<a href="manage_tea.php">manage_teacher</a> 
+	<a href="manage_course.php">manage_course</a> 
+
+	<a href="dev.php">dev</a> 
+	';
+
+	
+}
+
+function showTeacherMenu(){
+	echo '
+	<a href="index.php">index</a>  
+	<a href="add.php">add</a> 
+	<a href="set_course.php">set_course</a> 
+
+	<a href="dev.php">dev</a> 
+	';
+	
+}
+
+
+function showGrid($table_name,$sql,$primary_key){
+global $db;
+
+$i = 0;
+$php_self=php_self();
+
+runOperateWithGet($table_name,$sql,$primary_key);
+
+
+echo "<table class='table-bordered'>";
+$result = $db->query($sql);
+if ($result->num_rows == 0) {
+	echo "<h1>No Result</h1>";
+} else {		
+	while($row = $result->fetch_array(MYSQLI_ASSOC)){
+		if($i == 0){
+			echo "<tr>";
+			foreach($row as $x=>$x_value) {
+				echo "<th>";
+				echo $x;
+				echo "</th>";
+			}
+				echo "<th>";
+				echo "op";
+				echo "</th>";
+			echo "</tr>";			
+		}
+		echo "<tr>";
+		foreach($row as $x=>$x_value) {
+			echo "<td>" .$x_value."</td>" ;
+		}
+			echo "<td>"; 
+			echo '<a href="'.$php_self.'?op=edit&'.$primary_key.'='.$row[$primary_key].'">edit</a>';
+			echo '&nbsp;';
+			echo '<a href="'.$php_self.'?op=del&'.$primary_key.'='.$row[$primary_key].'">del</a>';
+			echo "</td>" ;
+		echo "</tr>";
+		$i=1;
+	}
+}
+
+echo '</table>';
+
+	
+}
+
+
+
+function runOperateWithGet($table_name,$sql,$primary_key){
+	
+	if(isset($_GET['op'])){
+		
+		if ($_GET['op'] == 'del') {
+			if(isset($_GET[$primary_key])){
+				$primary_key_value=$_GET[$primary_key];
+				execDel($table_name,$primary_key,$primary_key_value);
+				if($table_name == 'go'){
+					del_at_with_go_id($primary_key_value);
+				}
+			}
+
+		}elseif ($_GET['op'] == 'edit') {
+			echo "this is edit";
+			if($table_name == 'project'){
+				editProjectEntry($table_name,$primary_key,$_GET[$primary_key]);
+			}
+		}elseif ($_GET['op'] == 'add') {
+			addNewEntry($table_name);
+		}elseif ($_GET['op'] == 'save') {
+			saveNewEntry($table_name);
+		}
+
+	}
+}
+
+
+
+function execDel($table_name,$primary_key,$primary_key_value){
+	global $db;
+
+	$sql="DELETE FROM $table_name
+	WHERE $primary_key = '$primary_key_value' ";
+	$result = $db->query($sql) or die($db->error);
+
+	echo "<h1>del $table_name with $primary_key = $primary_key_value  success!</h1>";
+}
+
+//			<th> </th>
+function echoTableHead($table_name,$sql){
+	global $db;
+
+	$i = 0;
+	$result = $db->query($sql) ;
+	if ($result->num_rows == 0) {
+		echo "<h1>No Result</h1>";
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			if($i == 0){
+				echo "<tr>";
+				foreach($row as $x=>$x_value) {
+					echo "<th>";
+					echo $x;
+					echo "</th>";
+				}
+				echo "<th>";
+				echo "op";
+				echo "</th>";
+				echo "</tr>";			
+			}
+
+			$i=1;
+		}
+	}
+
+}
+
+function editProjectEntry($table_name,$primary_key,$primary_key_value){
+	global $db;
+	$php_self=php_self();
+
+	echo "<form>";
+	echo "<table class='table-bordered'>";
+	echoTableHead($table_name,"SELECT * from $table_name");
+
+	$sql="SELECT * from $table_name where $primary_key = '$primary_key_value' ";
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		echo "<h1>No Result</h1>";
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+
+			echo "<tr>";
+
+				echo "<td>"; 
+				echo $row[$primary_key];
+				echo "</td>" ;
+
+				echo "<td>"; 
+				echoSelectList('stu_grade','student');
+				echo "</td>" ;
+
+				echo "<td>"; 
+				echoSelectList('stu_major','student');
+				echo "</td>" ;
+
+				echo "<td>"; 
+				echoSelectList('course_code','course');
+				echo "</td>" ;
+
+				echo "<td>"; 
+				echoSelectList('tea_id','teacher');
+				echo "</td>" ;
+
+				echo "<td>"; 
+				
+				echo "</td>" ;
+
+
+
+			echo "</tr>";
+
+		}
+	}
+
+	echo '</table>';
+	
+}
+
+function echoSelectList($column,$table_name){
+	global $db;
+	$course_name=NULL;
+
+	$sql = "SELECT DISTINCT $column FROM $table_name";
+	echo '<select>';
+
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		echo "<option>No Result</option>";
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			if ($table_name == 'student') {
+				echo '<option value="'.$row[$column].'" selected>'.$row[$column].'</option>';
+			}
+			elseif($table_name == 'course'){
+				$course_name=get_course_name_with_code($row[$column]);
+				echo '<option value="'.$row[$column].'" selected>'.$row[$column].'-'.$course_name.'</option>';
+			}elseif($table_name == 'teacher'){
+				$tea_name=get_teacher_name_with_id($row[$column]);
+				echo '<option value="'.$row[$column].'" selected>'.$row[$column].'-'.$tea_name.'</option>';
+			}
+			
+		}
+	}
+
+	echo '</select>';
+}
+
+
+function addNewEntry($table_name){
+	global $db;
+	$sql="SELECT * from $table_name";
+	$php_self=php_self();
+
+	echo '<form method="post" action="'.$php_self.'?op=save">';
+	echo "<table class='table-bordered'>";
+	echoTableHead($table_name,$sql);
+
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echo "<h1>No Result</h1>";
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			
+			echo "<tr>";
+			foreach($row as $x=>$x_value) {
+				echo "<td>";
+				makeAnInput($x);
+				echo "</td>" ;
+			}
+				echo "<td>"; 
+				echo '<input type="submit" value="save">';
+				echo '&nbsp;';
+				echo '<a href="'.$php_self.'">cancel</a>';
+				echo "</td>" ;
+			echo "</tr>";
+
+			// just one line !
+			break;
+		}
+	}
+
+	echo "</table></form>";
+}
+
+function makeAnInput($name){
+	echo '<input type="text" name="'.$name.'" require>';
+}
+
+//must have POST , all the column must char
+function saveNewEntry($table_name){
+	global $db;
+	$sql="INSERT INTO()VALUES
+	()";
+	$col_name_str='';
+	$val_name_str='';
+
+	dev_var_dump('post');
+	$post_array = $_POST;
+
+	$i=0;
+	foreach($post_array as $x=>$x_value) {
+
+		echo "$x";
+		echo ".";
+		echo "$x_value";
+		echo "<br>";
+
+
+		if($i==0){
+			$col_name_str = $col_name_str.$x;
+			$val_name_str = $val_name_str."'".$x_value."'";
+		}else{
+			$col_name_str = $col_name_str.",".$x;
+			$val_name_str = $val_name_str.",'".$x_value."'";
+		}
+		$i++;
+	}
+
+	noise($col_name_str);
+	noise($val_name_str);
+
+
+}
 
 
 
@@ -284,6 +605,16 @@ function get_pro_detail_with_id($pro_id,&$stu_grade,&$stu_major,&$course_name){
 
 
 
+
+function del_at_with_go_id($go_id){
+	global $db;
+
+	$sql="DELETE FROM attend
+	WHERE go_id = '$go_id' ";
+	$db->query($sql) or die($db->error);
+
+	echo "<h1>del at with go_id = $go_id success!</h1>";
+}
 
 
 //****************** below are dev func *********************************
@@ -298,15 +629,7 @@ function del_go($go_id){
 	echo "<h1>del go with go_id success!</h1>";
 }
 
-function del_at_with_go_id($go_id){
-	global $db;
 
-	$sql="DELETE FROM attend
-	WHERE go_id = '$go_id' ";
-	$db->query($sql) or die($db->error);
-
-	echo "<h1>del at with go_id success!</h1>";
-}
 
 
 
@@ -335,6 +658,35 @@ function dev_var_dump($type){
 
 
 }
+
+
+function noise($var){
+	if(DEV_MODE == 0){
+		return ;
+	}
+	echo '<p> >>>>>>>>> WARNING! dev_mode is open!<<<<<<<<<<<<<<<<<<p>';
+
+	echo "<h1> see here -> $var <-   </h1>";
+
+	echo '<p> >>>>>>>>> WARNING! dev_mode is open!<<<<<<<<<<<<<<<<<<p>';
+}
+
+
+function dev_delay(){
+	if(DEV_MODE == 0){
+		//1 hour
+		return 3600;
+	}
+
+	//10 days
+	return 3600*24*10;
+
+	// 3 seconds
+	//return 3;
+
+}
+
+
 
 	
 
