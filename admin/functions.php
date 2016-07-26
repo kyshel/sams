@@ -217,6 +217,11 @@ function make_a_select_for_at_meta($name){
 	echo '</select>';
 }
 
+// !!!!!!!!!!!this func has bug, !!!!!!!!!!
+// o_id should not get by pro_id&go_time 
+//	when a user modify project, he maybe insert a same go_time,
+// with original pro_id
+// -> go_id should get by multi col: 
 function get_go_id($pro_id,$go_time){
 	global $db;
 
@@ -237,7 +242,7 @@ function check_go_unique($pro_id,$go_time){
 
 
 
-function get_course_name_with_code($course_id){
+function get_course_name_with_id($course_id){
 	global $db;
 
 	$sql="SELECT course_name
@@ -273,7 +278,7 @@ function get_stu_name_with_id($stu_id){
 	return $row['stu_name'];
 }
 
-function get_pro_detail_with_id($pro_id,&$stu_grade,&$stu_major,&$course_name){
+function get_pro_detail_with_id($pro_id,&$stu_grade,&$stu_major,&$course_id){
 	global $db;
 
 	$sql="SELECT stu_grade,stu_major,course_id
@@ -284,8 +289,9 @@ function get_pro_detail_with_id($pro_id,&$stu_grade,&$stu_major,&$course_name){
 
 	$stu_grade=$row['stu_grade'];
 	$stu_major=$row['stu_major'];
-	$course_name=get_course_name_with_code($row['course_id']);
+	$course_id=$row['course_id'];
 }
+
 
 function showMenuAccordUserRole(){
 	$user_role=$_SESSION['user_role'];
@@ -305,7 +311,8 @@ function showAdminMenu(){
 	<a href="manage_stu.php">manage_stu</a> 
 	<a href="manage_tea.php">manage_teacher</a> 
 	<a href="manage_course.php">manage_course</a>
-	<a href="manage_pro.php">manage_pro</a> 
+	<a href="manage_pro.php">manage_pro</a>
+	<a href="manage_go.php">manage_go</a>  
 
 	<a href="dev.php">dev</a> 
 	';
@@ -361,9 +368,11 @@ if ($result->num_rows == 0) {
 			echo "<td>"; 
 			echo '<a href="'.$php_self.'?op=edit&'.$primary_key.'='.$row[$primary_key].'">edit</a>';
 			echo '&nbsp;';
+
 			echo '<a href="'.$php_self.'?op=del&'.$primary_key.'='.$row[$primary_key].'" onclick="';
 			echo "return confirm('Are you sure you want to delete this item?');";
 			echo '">del</a>';
+
 			echo "</td>" ;
 		echo "</tr>";
 		$i=1;
@@ -419,8 +428,8 @@ function editEntry($table_name,$primary_key,$primary_key_value){
 	$sql="SELECT * from $table_name where $primary_key = '$primary_key_value' ";
 	$php_self=php_self();
 
-	noise($primary_key);
-	noise($primary_key_value);
+	noise($primary_key.'='.$primary_key_value);
+
 	echo '<form method="post" action="'.$php_self.'?op=update&'.$primary_key.'='.$primary_key_value.'"">';
 	echo "<table class='table-bordered'>";
 	echoTableHead($table_name,$sql);
@@ -614,7 +623,7 @@ function echoSelectList($column,$table_name){
 				echo '<option value="'.$row[$column].'" selected>'.$row[$column].'</option>';
 			}
 			elseif($table_name == 'course'){
-				$course_name=get_course_name_with_code($row[$column]);
+				$course_name=get_course_name_with_id($row[$column]);
 				echo '<option value="'.$row[$column].'" selected>'.$row[$column].'-'.$course_name.'</option>';
 			}elseif($table_name == 'teacher'){
 				$tea_name=get_teacher_name_with_id($row[$column]);
@@ -736,7 +745,7 @@ function del_at_with_go_id($go_id){
 	WHERE go_id = '$go_id' ";
 	$db->query($sql) or die($db->error);
 
-	echo "<h1>del at with go_id = $go_id success!</h1>";
+	echo "<p>del at with go_id = $go_id success!</p>";
 }
 
 
@@ -751,6 +760,24 @@ function getPrimaryKeyName($table_name){
 	$row = $result->fetch_array(MYSQLI_ASSOC);
 	return $row['Table'];
 }
+
+
+function getLastInsertID(){
+	global $db;
+
+	// $sql="INSERT INTO `go`(`pro_id`, `go_time`, `go_meta`) VALUES ('100','1','1')";
+
+	$sql="SELECT LAST_INSERT_ID()";
+	$result = $db->query($sql) or die($db->error);
+	$row = $result->fetch_array(MYSQLI_ASSOC);
+	$first_key_value=reset($row);
+	return $first_key_value;
+}
+
+
+
+
+
 
 
 
@@ -769,25 +796,40 @@ function del_go($go_id){
 
 
 
+function getNowTime(){
+	date_default_timezone_set('Asia/Shanghai');
+	$now = date('Y-m-d H:i:s', time());
+	return $now;
+}
+
+
+
+
+
+
+
+
 
 
 
 
 //---------------  global dev code ,reserve in production environment-------------
 
-function dev_var_dump($type){
+function dev_var_dump($var){
 	if(DEV_MODE == 0){
 		return ;
 	}
 	echo '<p> >>>>>>>>> '.__FUNCTION__.'<br>';
 
-	if($type == 'get'){
+	if($var == 'get'){
 		echo 'var_dump_get:';
 		var_dump($_GET);		
 	}
-	else if($type == 'post'){
+	else if($var == 'post'){
 		echo 'var_dump_get:';
 		var_dump($_POST);
+	}else{
+		var_dump($var);
 	}
 
 	echo '<br> <<<<<<<<< '.__FUNCTION__.'</p>';
@@ -839,6 +881,10 @@ function dev_echo_col_name($table_name,$col_name){
 
 	}
 }
+
+
+
+
 
 
 function echo_red($str){

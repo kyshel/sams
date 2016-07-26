@@ -6,20 +6,37 @@ dev_var_dump('post');
 $pro_id=$_POST["pro_id"];
 $go_time=$_POST["date"];
 $stu_sum=$_POST["stu_sum"];
+
 $go_id=NULL;
 $stu_id=NULL;
 $is_online=NULL;
 
+$stu_grade=NULL;
+$stu_major=NULL;
+$course_id=NULL;
+get_pro_detail_with_id($pro_id,$stu_grade,$stu_major,$course_id);
+
+$now=getNowTime();
+$go_meta='无';
+
 //insert go
 check_go_unique('','');
+
 $sql="INSERT INTO 
-go(pro_id,go_time,go_meta)VALUES
-('$pro_id','$go_time','')
+go(pro_id,stu_grade,stu_major,course_id,go_time,go_meta,add_time)VALUES
+('$pro_id','$stu_grade','$stu_major','$course_id','$go_time','$go_meta','$now')
 ";
+
 $db->query($sql) or die($db->error);
 
 //insert at
-$go_id=get_go_id($pro_id,$go_time);
+$go_id=getLastInsertID();
+//$go_id=get_go_id($pro_id,$go_time);
+
+noise('$go_id is:'.$go_id);
+
+//die();
+
 for($j=0;$j<$stu_sum;$j++){
 	// make string that match the var name
 	$stu_num_j="stu_num".$j;
@@ -45,11 +62,8 @@ for($j=0;$j<$stu_sum;$j++){
 }
 
 
-$stu_grade=NULL;
-$stu_major=NULL;
-$course_name=NULL;
-get_pro_detail_with_id($_POST["pro_id"],$stu_grade,$stu_major,$course_name);
-echo '<h1>提交成功！'.$stu_grade.'级，'.$stu_major.'专业，'.$course_name.'课，'.$go_time.'的点名结果如下：</h1>';
+
+echo '<h1>提交成功！'.$stu_grade.'级，'.$stu_major.'专业，'.$course_id.'课，'.$go_time.'的点名结果如下：</h1>';
 
 
 // table --------------------------
