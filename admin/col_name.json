@@ -1,0 +1,21 @@
+{
+	"student":
+	{
+		"stu_id":"学号",
+		"stu_name":"姓名",
+		"stu_sex":"性别",
+		"stu_grade":"年级",
+		"stu_dep":"学院",
+		"stu_major":"专业",
+		"stu_class":"班级"
+	},
+	"teacher":
+	{
+		"tea_id":"工号"
+	},
+	"op":{
+		"op":"操作"
+	}
+}
+
+

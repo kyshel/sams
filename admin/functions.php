@@ -53,16 +53,16 @@ function check_phpversion_for_hash(){
 // generate a select course list that belong to logined teacher
 function teacher_get_own_course($tea_id){
 	global $db;
-	$course_code=NULL;
+	$course_id=NULL;
 	echo '<select name="pro_id" required>';
 
-	$sql="SELECT pro_id,stu_grade,stu_major,course_code 
+	$sql="SELECT pro_id,stu_grade,stu_major,course_id 
 	from project
 	where tea_id = $tea_id";
 
 	// ** test if_condition is work ir not
-	// $sql="SELECT course_name from course where course_code in(
-	// SELECT course_code from project where tea_id = 0
+	// $sql="SELECT course_name from course where course_id in(
+	// SELECT course_id from project where tea_id = 0
 	// )";
 
 	$result = $db->query($sql);
@@ -70,11 +70,11 @@ function teacher_get_own_course($tea_id){
 		echo "<option>Please set your course first</option>";
     } else {
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
-			$course_code = $row['course_code'] ;
+			$course_id = $row['course_id'] ;
 
 			$sql2="SELECT course_name
 			from course
-			where course_code = '$course_code' ";
+			where course_id = '$course_id' ";
 			$result2 = $db->query($sql2);
 			$row2 = $result2->fetch_array(MYSQLI_ASSOC);
 
@@ -237,12 +237,12 @@ function check_go_unique($pro_id,$go_time){
 
 
 
-function get_course_name_with_code($course_code){
+function get_course_name_with_code($course_id){
 	global $db;
 
 	$sql="SELECT course_name
 	from course
-	where course_code = '$course_code' ";
+	where course_id = '$course_id' ";
 	$result = $db->query($sql);
 	$row = $result->fetch_array(MYSQLI_ASSOC);
 
@@ -276,7 +276,7 @@ function get_stu_name_with_id($stu_id){
 function get_pro_detail_with_id($pro_id,&$stu_grade,&$stu_major,&$course_name){
 	global $db;
 
-	$sql="SELECT stu_grade,stu_major,course_code
+	$sql="SELECT stu_grade,stu_major,course_id
 	from project
 	where pro_id = '$pro_id'";
 	$result = $db->query($sql);
@@ -284,7 +284,7 @@ function get_pro_detail_with_id($pro_id,&$stu_grade,&$stu_major,&$course_name){
 
 	$stu_grade=$row['stu_grade'];
 	$stu_major=$row['stu_major'];
-	$course_name=get_course_name_with_code($row['course_code']);
+	$course_name=get_course_name_with_code($row['course_id']);
 }
 
 function showMenuAccordUserRole(){
@@ -304,7 +304,8 @@ function showAdminMenu(){
 	<a href="index.php">index</a>  
 	<a href="manage_stu.php">manage_stu</a> 
 	<a href="manage_tea.php">manage_teacher</a> 
-	<a href="manage_course.php">manage_course</a> 
+	<a href="manage_course.php">manage_course</a>
+	<a href="manage_pro.php">manage_pro</a> 
 
 	<a href="dev.php">dev</a> 
 	';
@@ -334,22 +335,24 @@ runOperateWithGet($table_name,$sql,$primary_key);
 
 
 echo "<table class='table-bordered'>";
+echoTableHead($table_name,$sql,1);
+
 $result = $db->query($sql);
 if ($result->num_rows == 0) {
 	echo "<h1>No Result</h1>";
 } else {		
 	while($row = $result->fetch_array(MYSQLI_ASSOC)){
 		if($i == 0){
-			echo "<tr>";
-			foreach($row as $x=>$x_value) {
-				echo "<th>";
-				echo $x;
-				echo "</th>";
-			}
-				echo "<th>";
-				echo "op";
-				echo "</th>";
-			echo "</tr>";			
+			// echo "<tr>";
+			// foreach($row as $x=>$x_value) {
+			// 	echo "<th>";
+			// 	echo $x;
+			// 	echo "</th>";
+			// }
+			// 	echo "<th>";
+			// 	echo "op";
+			// 	echo "</th>";
+			// echo "</tr>";			
 		}
 		echo "<tr>";
 		foreach($row as $x=>$x_value) {
@@ -358,7 +361,9 @@ if ($result->num_rows == 0) {
 			echo "<td>"; 
 			echo '<a href="'.$php_self.'?op=edit&'.$primary_key.'='.$row[$primary_key].'">edit</a>';
 			echo '&nbsp;';
-			echo '<a href="'.$php_self.'?op=del&'.$primary_key.'='.$row[$primary_key].'">del</a>';
+			echo '<a href="'.$php_self.'?op=del&'.$primary_key.'='.$row[$primary_key].'" onclick="';
+			echo "return confirm('Are you sure you want to delete this item?');";
+			echo '">del</a>';
 			echo "</td>" ;
 		echo "</tr>";
 		$i=1;
@@ -366,8 +371,10 @@ if ($result->num_rows == 0) {
 }
 
 echo '</table>';
+echo '<a href="'.php_self().'?op=add'.'">add</a>';
 
-	
+
+
 }
 
 
@@ -388,16 +395,110 @@ function runOperateWithGet($table_name,$sql,$primary_key){
 		}elseif ($_GET['op'] == 'edit') {
 			echo "this is edit";
 			if($table_name == 'project'){
-				editProjectEntry($table_name,$primary_key,$_GET[$primary_key]);
+				editProjectEntry($table_name,$primary_key,$_GET[$primary_key]);				
+			}else{
+				editEntry($table_name,$primary_key,$_GET[$primary_key]);
 			}
-		}elseif ($_GET['op'] == 'add') {
+		}elseif ($_GET['op'] == 'update') {
+			updateEntry($table_name,$primary_key,$_GET[$primary_key]);
+		}
+
+		elseif ($_GET['op'] == 'add') {
+
 			addNewEntry($table_name);
-		}elseif ($_GET['op'] == 'save') {
-			saveNewEntry($table_name);
+		}elseif ($_GET['op'] == 'insert') {
+			insertEntry($table_name);
 		}
 
 	}
 }
+
+function editEntry($table_name,$primary_key,$primary_key_value){
+	global $db;
+
+	$sql="SELECT * from $table_name where $primary_key = '$primary_key_value' ";
+	$php_self=php_self();
+
+	noise($primary_key);
+	noise($primary_key_value);
+	echo '<form method="post" action="'.$php_self.'?op=update&'.$primary_key.'='.$primary_key_value.'"">';
+	echo "<table class='table-bordered'>";
+	echoTableHead($table_name,$sql);
+
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echo "<h1>No Result</h1>";
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			
+			echo "<tr>";
+			foreach($row as $x=>$x_value) {
+				echo "<td>";
+				makeAnInput($x,$x_value);
+				echo "</td>" ;
+			}
+
+			echo "</tr>";
+
+			// just one line !
+			break;
+		}
+	}
+
+	echo "</table>";
+
+	echo '<input type="submit" value="update">';
+	echo '&nbsp;';
+	echo '<a href="'.$php_self.'">cancel</a>';
+
+	echo "</form>";
+
+	die();
+
+}
+
+function updateEntry($table_name,$primary_key,$primary_key_value){
+	global $db;
+	$php_self=php_self();
+	$set_union = '';
+	$post_array = $_POST;
+	$i=0;
+
+	dev_var_dump('post');
+
+	foreach($post_array as $x=>$x_value) {
+
+		// echo "$x";
+		// echo ".";
+		// echo "$x_value";
+		// echo "<br>";
+
+		if($i==0){
+			$set_union =$set_union . $x ."='".$x_value."'";
+		}else{
+			$set_union =$set_union .",". $x ."='".$x_value."'";
+		}
+		$i++;
+	}
+
+	//noise($set_union);
+
+	$sql='UPDATE '.$table_name.
+	' SET '.$set_union.
+	' WHERE '.$primary_key.'=';
+	$sql=$sql."'$primary_key_value'";
+
+	noise($sql);
+
+
+
+	$result = $db->query($sql) or die($db->error);
+	if ($result == 1) {
+		echo "<h5>update success!</h5>";
+	}
+
+}
+
 
 
 
@@ -408,11 +509,11 @@ function execDel($table_name,$primary_key,$primary_key_value){
 	WHERE $primary_key = '$primary_key_value' ";
 	$result = $db->query($sql) or die($db->error);
 
-	echo "<h1>del $table_name with $primary_key = $primary_key_value  success!</h1>";
+	echo "<p>del $table_name with $primary_key = $primary_key_value  success!</p>";
 }
 
 //			<th> </th>
-function echoTableHead($table_name,$sql){
+function echoTableHead($table_name,$sql,$need_op = NULL){
 	global $db;
 
 	$i = 0;
@@ -425,12 +526,17 @@ function echoTableHead($table_name,$sql){
 				echo "<tr>";
 				foreach($row as $x=>$x_value) {
 					echo "<th>";
-					echo $x;
+					//echo $x;
+					dev_echo_col_name($table_name,$x);
 					echo "</th>";
 				}
-				echo "<th>";
-				echo "op";
-				echo "</th>";
+				if($need_op == 1){
+					echo "<th>";
+					// echo "op";
+					dev_echo_col_name('op','op');
+					echo "</th>";
+				}
+					
 				echo "</tr>";			
 			}
 
@@ -470,7 +576,7 @@ function editProjectEntry($table_name,$primary_key,$primary_key_value){
 				echo "</td>" ;
 
 				echo "<td>"; 
-				echoSelectList('course_code','course');
+				echoSelectList('course_id','course');
 				echo "</td>" ;
 
 				echo "<td>"; 
@@ -527,7 +633,7 @@ function addNewEntry($table_name){
 	$sql="SELECT * from $table_name";
 	$php_self=php_self();
 
-	echo '<form method="post" action="'.$php_self.'?op=save">';
+	echo '<form method="post" action="'.$php_self.'?op=insert">';
 	echo "<table class='table-bordered'>";
 	echoTableHead($table_name,$sql);
 
@@ -543,11 +649,9 @@ function addNewEntry($table_name){
 				makeAnInput($x);
 				echo "</td>" ;
 			}
-				echo "<td>"; 
-				echo '<input type="submit" value="save">';
-				echo '&nbsp;';
-				echo '<a href="'.$php_self.'">cancel</a>';
-				echo "</td>" ;
+				// echo "<td>"; 
+				
+				// echo "</td>" ;
 			echo "</tr>";
 
 			// just one line !
@@ -555,18 +659,26 @@ function addNewEntry($table_name){
 		}
 	}
 
-	echo "</table></form>";
+	echo "</table>";
+
+	echo '<input type="submit" value="insert">';
+	echo '&nbsp;';
+	echo '<a href="'.$php_self.'">cancel</a>';
+
+	echo "</form>";
+
+	die();
 }
 
-function makeAnInput($name){
-	echo '<input type="text" name="'.$name.'" require>';
+function makeAnInput($name,$value = NULL){
+	echo '<input type="text" name="'.$name.'" value="'.$value.'" required>';
 }
 
 //must have POST , all the column must char
-function saveNewEntry($table_name){
+function insertEntry($table_name){
 	global $db;
-	$sql="INSERT INTO()VALUES
-	()";
+	$php_self=php_self();
+
 	$col_name_str='';
 	$val_name_str='';
 
@@ -576,11 +688,10 @@ function saveNewEntry($table_name){
 	$i=0;
 	foreach($post_array as $x=>$x_value) {
 
-		echo "$x";
-		echo ".";
-		echo "$x_value";
-		echo "<br>";
-
+		// echo "$x";
+		// echo ".";
+		// echo "$x_value";
+		// echo "<br>";
 
 		if($i==0){
 			$col_name_str = $col_name_str.$x;
@@ -592,8 +703,20 @@ function saveNewEntry($table_name){
 		$i++;
 	}
 
-	noise($col_name_str);
-	noise($val_name_str);
+	//noise($col_name_str);
+	//noise($val_name_str);
+
+	$sql='INSERT INTO '.$table_name.'('.$col_name_str.')VALUES
+	('.$val_name_str.')';
+
+	noise($sql);
+
+	$result = $db->query($sql) or die($db->error);
+	if ($result == 1) {
+		echo "<h5>insert success!</h5>";
+		//echo '<a href="'.$php_self.'">cancel</a>';
+	}
+	
 
 
 }
@@ -615,6 +738,20 @@ function del_at_with_go_id($go_id){
 
 	echo "<h1>del at with go_id = $go_id success!</h1>";
 }
+
+
+
+
+
+function getPrimaryKeyName($table_name){
+	global $db;
+
+	$sql="SHOW KEYS FROM $table_name WHERE Key_name = 'PRIMARY'";
+	$result = $db->query($sql) or die($db->error);
+	$row = $result->fetch_array(MYSQLI_ASSOC);
+	return $row['Table'];
+}
+
 
 
 //****************** below are dev func *********************************
@@ -642,7 +779,7 @@ function dev_var_dump($type){
 	if(DEV_MODE == 0){
 		return ;
 	}
-	echo '<p> >>>>>>>>> WARNING! dev_mode is open!<br>';
+	echo '<p> >>>>>>>>> '.__FUNCTION__.'<br>';
 
 	if($type == 'get'){
 		echo 'var_dump_get:';
@@ -653,9 +790,7 @@ function dev_var_dump($type){
 		var_dump($_POST);
 	}
 
-
-	echo '<br> <<<<<<<<<< WARNING! dev_mode is open!</p>';
-
+	echo '<br> <<<<<<<<< '.__FUNCTION__.'</p>';
 
 }
 
@@ -664,11 +799,12 @@ function noise($var){
 	if(DEV_MODE == 0){
 		return ;
 	}
-	echo '<p> >>>>>>>>> WARNING! dev_mode is open!<<<<<<<<<<<<<<<<<<p>';
 
-	echo "<h1> see here -> $var <-   </h1>";
+	echo '<p> >>>>>>>>> '.__FUNCTION__.'<br>';
 
-	echo '<p> >>>>>>>>> WARNING! dev_mode is open!<<<<<<<<<<<<<<<<<<p>';
+	echo 'see here -> <span style="color:red;">'.$var.'</span> <-   ';
+
+	echo '<br> <<<<<<<<< '.__FUNCTION__.'</p>';
 }
 
 
@@ -686,9 +822,28 @@ function dev_delay(){
 
 }
 
+function dev_echo_col_name($table_name,$col_name){
+	if(DEV_MODE == 1){
+		echo $col_name;
+		return;
+	}else{
+		$str = file_get_contents('col_name.json');
+		$col_name_array=json_decode($str, true);
+
+		if(isset($col_name_array[$table_name][$col_name])){
+			echo $col_name_array[$table_name][$col_name];
+		}else{
+			echo $col_name;
+			echo_red('check col_name.json file');
+		}
+
+	}
+}
 
 
-	
+function echo_red($str){
+	echo '<span style="color:red;">'.$str.'</span>';
+}
 
 
 

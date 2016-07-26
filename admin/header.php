@@ -30,6 +30,9 @@ Your Role is <?php echo $_SESSION['user_role']; ?>,
 <?php showMenuAccordUserRole(); ?>
 </div>
 
+<?php //noise('dev mode is open!'); ?>
+
+
 <hr>
 
 

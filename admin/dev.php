@@ -12,6 +12,19 @@ echoSelectList('course_code','course');
 
 
 echo '<input type="submit" value="save">';
+?>
+
+
+
+
+<?php
+
+getPrimaryKeyName('go');
+
+
+
 
 ?>
+
+
 
