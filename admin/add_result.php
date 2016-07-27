@@ -21,22 +21,17 @@ $go_meta='无';
 
 //insert go
 check_go_unique('','');
-
 $sql="INSERT INTO 
 go(pro_id,stu_grade,stu_major,course_id,go_time,go_meta,add_time)VALUES
 ('$pro_id','$stu_grade','$stu_major','$course_id','$go_time','$go_meta','$now')
 ";
-
 $db->query($sql) or die($db->error);
 
 //insert at
 $go_id=getLastInsertID();
 //$go_id=get_go_id($pro_id,$go_time);
-
 noise('$go_id is:'.$go_id);
-
 //die();
-
 for($j=0;$j<$stu_sum;$j++){
 	// make string that match the var name
 	$stu_num_j="stu_num".$j;

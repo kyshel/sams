@@ -21,4 +21,4 @@ define("DB_PASS", "Aa123123");
  */
 
 // define("DEV_MODE",0);
-define("DEV_MODE",1);
+define("DEV_MODE",0);

@@ -2,7 +2,7 @@
 
 
 <script type="text/javascript">
-	$('#datepicker').datepicker({
+	$('#datepicker0').datepicker({
 		format: "yyyy-mm-dd",
 		autoclose: true,
 	});
@@ -28,7 +28,7 @@ while($row = $result->fetch_array(MYSQLI_ASSOC)){
 ];
 
 
-$('#datepicker0').datepicker({
+$('#datepicker').datepicker({
 	format: "yyyy-mm-dd",
 	autoclose: true,
      /*todayHighlight: true,*/

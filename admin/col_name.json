@@ -1,4 +1,5 @@
 {
+	"_comment1": "below are col_name",
 	"student":
 	{
 		"stu_id":"学号",
@@ -11,10 +12,40 @@
 	},
 	"teacher":
 	{
-		"tea_id":"工号"
+		"tea_id":"工号",
+		"tea_name":"姓名",
+		"tea_password":"密码"
 	},
+	"course":
+	{
+		"course_id":"工号",
+		"course_name":"课程名"
+	},
+	"project":
+	{
+		"pro_id":"工号",
+		"stu_grade":"年级",
+		"stu_major":"专业",
+		"course_id":"课程代码",
+		"tea_id":"老师"
+	},
+	"go":
+	{
+		"pro_id":"工号"
+
+	},
+
+
+
+
 	"op":{
 		"op":"操作"
+	},
+
+	"_comment2": "at_meta option",
+	"at_meta":{
+		"0":"无",
+		"1":"请假"
 	}
 }
 

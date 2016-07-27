@@ -8,12 +8,25 @@ require_once("header.php");
 // echoSelectList('course_code','course');
 // echo '<input type="submit" value="save">';
 ?>
-
+<link href="css/bootstrap-switch.min.css" rel="stylesheet">
+<script src="js/bootstrap-switch.min.js"></script>
 
 
 
 <?php
 
+
+updateAt();
+
+editAt();
+
+
+
+
+
+
+// $a=getOneResultByOneQuery("SELECT at_yes from attend where stu_id = '2308020101' and go_id = '22'");
+// noise($a);
 
 
 // $sql="INSERT INTO `go`(`pro_id`, `go_time`, `go_meta`) VALUES ('100','1','1')";
@@ -25,7 +38,7 @@ require_once("header.php");
 // 	//echo '<a href="'.$php_self.'">cancel</a>';
 // }
 
-echo getNowTime();
+//echo getNowTime();
 
 //makeAnInput('a','',1,1);
 
@@ -34,14 +47,16 @@ echo getNowTime();
 
 
 
-dev_var_dump('post');
+//dev_var_dump('post');
 //inputNewPro('project');
 
-paintResult('1');
+//paintResult('1');
 
 ?>
 
-
+<script type="text/javascript">
+  $('[type="checkbox"]').bootstrapSwitch();
+</script>
 
 
 
