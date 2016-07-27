@@ -11,7 +11,7 @@ dev_var_dump('post');
 $stu_grade=NULL;
 $stu_major=NULL;
 $course_id=NULL;
-get_pro_detail_with_id($_POST["pro_id"],$stu_grade,$stu_major,$course_id);
+getProDetail($_POST["pro_id"],$stu_grade,$stu_major,$course_id);
 
 echo '<h3>您选择的年级为'.$stu_grade.'级，专业为'.$stu_major.'，课程为'.$course_id.'，日期为'.$_POST["date"].'：
 </h3>';

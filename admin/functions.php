@@ -97,7 +97,7 @@ function php_self(){
 
 function dynamic_css_js_lib(){
 	$php_self=php_self();
-	if ($php_self == 'add.php' ){
+	if ($php_self == 'add.php' || $php_self == 'show_at.php' ){
 		echo '
 		<link rel="stylesheet" href="css/bootstrap-datepicker3.min.css">
 		<script src="js/bootstrap-datepicker.min.js"></script>
@@ -242,7 +242,7 @@ function check_go_unique($pro_id,$go_time){
 
 
 
-function get_course_name_with_id($course_id){
+function getCourseName($course_id){
 	global $db;
 
 	$sql="SELECT course_name
@@ -254,7 +254,7 @@ function get_course_name_with_id($course_id){
 	return $row['course_name'];
 }
 
-function get_teacher_name_with_id($tea_id){
+function getTeacherName($tea_id){
 	global $db;
 
 	$sql="SELECT tea_name
@@ -278,7 +278,7 @@ function get_stu_name_with_id($stu_id){
 	return $row['stu_name'];
 }
 
-function get_pro_detail_with_id($pro_id,&$stu_grade,&$stu_major,&$course_id){
+function getProDetail($pro_id,&$stu_grade,&$stu_major,&$course_id){
 	global $db;
 
 	$sql="SELECT stu_grade,stu_major,course_id
@@ -311,8 +311,11 @@ function showAdminMenu(){
 	<a href="manage_stu.php">manage_stu</a> 
 	<a href="manage_tea.php">manage_teacher</a> 
 	<a href="manage_course.php">manage_course</a>
+	
 	<a href="manage_pro.php">manage_pro</a>
-	<a href="manage_go.php">manage_go</a>  
+	<a href="manage_go.php">manage_go</a> 
+
+	<a href="show_at.php">show_at</a>  
 
 	<a href="dev.php">dev</a> 
 	';
@@ -323,7 +326,8 @@ function showAdminMenu(){
 function showTeacherMenu(){
 	echo '
 	<a href="index.php">index</a>  
-	<a href="add.php">add</a> 
+	<a href="add.php">add</a>
+	<a href="show_at.php">show_at</a> 
 	<a href="set_course.php">set_course</a> 
 
 	<a href="dev.php">dev</a> 
@@ -363,7 +367,13 @@ if ($result->num_rows == 0) {
 		}
 		echo "<tr>";
 		foreach($row as $x=>$x_value) {
-			echo "<td>" .$x_value."</td>" ;
+			if( ($x == 'course_id') && ($php_self=='set_course.php') ){
+				$course_name=getCourseName($x_value);
+				echo "<td>" .$x_value."-".$course_name."</td>" ;
+			}else{
+				echo "<td>" .$x_value."</td>" ;
+			}
+			
 		}
 			echo "<td>"; 
 			echo '<a href="'.$php_self.'?op=edit&'.$primary_key.'='.$row[$primary_key].'">edit</a>';
@@ -402,9 +412,8 @@ function runOperateWithGet($table_name,$sql,$primary_key){
 			}
 
 		}elseif ($_GET['op'] == 'edit') {
-			echo "this is edit";
 			if($table_name == 'project'){
-				editProjectEntry($table_name,$primary_key,$_GET[$primary_key]);				
+				editProEntry($table_name,$_SESSION['user_role'],$primary_key,$_GET[$primary_key]);			
 			}else{
 				editEntry($table_name,$primary_key,$_GET[$primary_key]);
 			}
@@ -413,11 +422,16 @@ function runOperateWithGet($table_name,$sql,$primary_key){
 		}
 
 		elseif ($_GET['op'] == 'add') {
-
-			addNewEntry($table_name);
+			if($table_name == 'project'){
+				inputNewPro($table_name,$_SESSION['user_role']);				
+			}else{
+				addNewEntry($table_name);
+			}
+			
 		}elseif ($_GET['op'] == 'insert') {
 			insertEntry($table_name);
 		}
+
 
 	}
 }
@@ -503,12 +517,98 @@ function updateEntry($table_name,$primary_key,$primary_key_value){
 
 	$result = $db->query($sql) or die($db->error);
 	if ($result == 1) {
-		echo "<h5>update success!</h5>";
+		echo_green('Update success!');
+		//echo "<h5>update success!</h5>";
 	}
 
 }
 
+function addNewEntry($table_name){
+	global $db;
+	$sql="SELECT * from $table_name";
+	$php_self=php_self();
 
+	echo '<form method="post" action="'.$php_self.'?op=insert">';
+	echo "<table class='table-bordered'>";
+	echoTableHead($table_name,$sql);
+
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echo "<h1>No Result</h1>";
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			
+			echo "<tr>";
+			foreach($row as $x=>$x_value) {
+				echo "<td>";
+				makeAnInput($x);
+				echo "</td>" ;
+			}
+				// echo "<td>"; 
+				
+				// echo "</td>" ;
+			echo "</tr>";
+
+			// just one line !
+			break;
+		}
+	}
+
+	echo "</table>";
+
+	echo '<input type="submit" value="insert">';
+	echo '&nbsp;';
+	echo '<a href="'.$php_self.'">cancel</a>';
+
+	echo "</form>";
+
+	die();
+}
+
+//must have POST , all the column must char
+function insertEntry($table_name){
+	global $db;
+	$php_self=php_self();
+
+	$col_name_str='';
+	$val_name_str='';
+
+	dev_var_dump('post');
+	$post_array = $_POST;
+
+	$i=0;
+	foreach($post_array as $x=>$x_value) {
+
+		// echo "$x";
+		// echo ".";
+		// echo "$x_value";
+		// echo "<br>";
+
+		if($i==0){
+			$col_name_str = $col_name_str.$x;
+			$val_name_str = $val_name_str."'".$x_value."'";
+		}else{
+			$col_name_str = $col_name_str.",".$x;
+			$val_name_str = $val_name_str.",'".$x_value."'";
+		}
+		$i++;
+	}
+
+	//noise($col_name_str);
+	//noise($val_name_str);
+
+	$sql='INSERT INTO '.$table_name.'('.$col_name_str.')VALUES
+	('.$val_name_str.')';
+
+	noise($sql);
+
+	$result = $db->query($sql) or die($db->error);
+	if ($result == 1) {
+		echo_green('Insert success!'); 
+		//echo '<a href="'.$php_self.'">cancel</a>';
+	}
+	
+}
 
 
 function execDel($table_name,$primary_key,$primary_key_value){
@@ -522,7 +622,7 @@ function execDel($table_name,$primary_key,$primary_key_value){
 }
 
 //			<th> </th>
-function echoTableHead($table_name,$sql,$need_op = NULL){
+function echoTableHead($table_name,$sql,$need_op = 0){
 	global $db;
 
 	$i = 0;
@@ -607,40 +707,22 @@ function editProjectEntry($table_name,$primary_key,$primary_key_value){
 	
 }
 
-function echoSelectList($column,$table_name){
+
+
+
+
+
+function inputNewPro($table_name,$user_role=NULL){
 	global $db;
-	$course_name=NULL;
-
-	$sql = "SELECT DISTINCT $column FROM $table_name";
-	echo '<select>';
-
-	$result = $db->query($sql) or die($db->error);
-	if ($result->num_rows == 0) {
-		echo "<option>No Result</option>";
-	} else {		
-		while($row = $result->fetch_array(MYSQLI_ASSOC)){
-			if ($table_name == 'student') {
-				echo '<option value="'.$row[$column].'" selected>'.$row[$column].'</option>';
-			}
-			elseif($table_name == 'course'){
-				$course_name=get_course_name_with_id($row[$column]);
-				echo '<option value="'.$row[$column].'" selected>'.$row[$column].'-'.$course_name.'</option>';
-			}elseif($table_name == 'teacher'){
-				$tea_name=get_teacher_name_with_id($row[$column]);
-				echo '<option value="'.$row[$column].'" selected>'.$row[$column].'-'.$tea_name.'</option>';
-			}
-			
-		}
-	}
-
-	echo '</select>';
-}
-
-
-function addNewEntry($table_name){
-	global $db;
-	$sql="SELECT * from $table_name";
+	//$sql="SELECT stu_grade,stu_major,course_id from $table_name";
 	$php_self=php_self();
+	$tea_id=$_SESSION['tea_id'];
+
+	if ($user_role=='admin') {
+		$sql="SELECT stu_grade,stu_major,course_id,tea_id from $table_name";
+	}elseif($user_role=='teacher'){
+		$sql="SELECT stu_grade,stu_major,course_id from $table_name";
+	}
 
 	echo '<form method="post" action="'.$php_self.'?op=insert">';
 	echo "<table class='table-bordered'>";
@@ -654,13 +736,45 @@ function addNewEntry($table_name){
 			
 			echo "<tr>";
 			foreach($row as $x=>$x_value) {
-				echo "<td>";
-				makeAnInput($x);
-				echo "</td>" ;
-			}
-				// echo "<td>"; 
 				
-				// echo "</td>" ;
+				$PK_name=getPrimaryKeyName($table_name);
+				//noise('$x is:'.$x);
+				//noise('$PK_name is:'.$PK_name);
+				if($x==$PK_name){
+					;
+				}else{
+					echo "<td>";
+					switch ($x) {
+						case 'stu_grade':
+							$query="SELECT DISTINCT stu_grade from student ";
+							break;
+
+						case 'stu_major':
+							$query="SELECT DISTINCT stu_major from student ";
+							break;
+
+						case 'course_id':
+							$query="SELECT DISTINCT course_id from course ";
+							break;
+
+						case 'tea_id':
+							$query="SELECT DISTINCT tea_id from teacher ";
+							break;
+
+						default:
+							
+							break;
+					}
+
+					//$query="SELECT DISTINCT $x from course ";
+					
+					makeSelect($x,$query);
+
+					echo "</td>" ;
+				}
+				
+			}
+
 			echo "</tr>";
 
 			// just one line !
@@ -670,6 +784,7 @@ function addNewEntry($table_name){
 
 	echo "</table>";
 
+	makeAnInput('tea_id',$tea_id,1,1);
 	echo '<input type="submit" value="insert">';
 	echo '&nbsp;';
 	echo '<a href="'.$php_self.'">cancel</a>';
@@ -679,56 +794,122 @@ function addNewEntry($table_name){
 	die();
 }
 
-function makeAnInput($name,$value = NULL){
-	echo '<input type="text" name="'.$name.'" value="'.$value.'" required>';
-}
 
-//must have POST , all the column must char
-function insertEntry($table_name){
+
+
+
+function editProEntry($table_name,$user_role=NULL,$primary_key,$primary_key_value){
 	global $db;
+	//$sql="SELECT stu_grade,stu_major,course_id from $table_name";
 	$php_self=php_self();
+	$tea_id=$_SESSION['tea_id'];
 
-	$col_name_str='';
-	$val_name_str='';
+	if ($user_role=='admin') {
+		$sql="SELECT pro_id,stu_grade,stu_major,course_id,tea_id from $table_name 
+		where $primary_key = '$primary_key_value' ";
+	}elseif($user_role=='teacher'){
+		$sql="SELECT pro_id,stu_grade,stu_major,course_id from $table_name
+		where $primary_key = '$primary_key_value' ";
+	}
 
-	dev_var_dump('post');
-	$post_array = $_POST;
+	echo '<form method="post" action="'.$php_self.'?op=update&'.$primary_key.'='.$primary_key_value.'"">';
+	echo "<table class='table-bordered'>";
+	echoTableHead($table_name,$sql);
 
-	$i=0;
-	foreach($post_array as $x=>$x_value) {
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echo "<h1>No Result</h1>";
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			
+			echo "<tr>";
+			foreach($row as $x=>$x_value) {
+				echo "<td>";
 
-		// echo "$x";
-		// echo ".";
-		// echo "$x_value";
-		// echo "<br>";
+				$PK_name=getPrimaryKeyName($table_name);
+				//noise('$x is:'.$x);
+				//noise('$PK_name is:'.$PK_name);
+				if($x==$PK_name){
+					echo $x_value;
+				}else{					
+					switch ($x) {
+						case 'stu_grade':
+							$query="SELECT DISTINCT stu_grade from student ";
+							break;
 
-		if($i==0){
-			$col_name_str = $col_name_str.$x;
-			$val_name_str = $val_name_str."'".$x_value."'";
-		}else{
-			$col_name_str = $col_name_str.",".$x;
-			$val_name_str = $val_name_str.",'".$x_value."'";
+						case 'stu_major':
+							$query="SELECT DISTINCT stu_major from student ";
+							break;
+
+						case 'course_id':
+							$query="SELECT DISTINCT course_id from course ";
+							break;
+
+						case 'tea_id':
+							$query="SELECT DISTINCT tea_id from teacher ";
+							break;
+
+						default:
+							
+							break;
+					}
+
+					//$query="SELECT DISTINCT $x from course ";
+					
+					makeSelect($x,$query,$x_value);
+
+					echo "</td>" ;
+				}
+				
+			}
+
+			echo "</tr>";
+
+			// just one line !
+			break;
 		}
-		$i++;
 	}
 
-	//noise($col_name_str);
-	//noise($val_name_str);
+	echo "</table>";
 
-	$sql='INSERT INTO '.$table_name.'('.$col_name_str.')VALUES
-	('.$val_name_str.')';
+	//make a hidden post_var for tea_id
+	makeAnInput('tea_id',$tea_id,1,1);
+	echo '<input type="submit" value="update">';
+	echo '&nbsp;';
+	echo '<a href="'.$php_self.'">cancel</a>';
 
-	noise($sql);
+	echo "</form>";
 
-	$result = $db->query($sql) or die($db->error);
-	if ($result == 1) {
-		echo "<h5>insert success!</h5>";
-		//echo '<a href="'.$php_self.'">cancel</a>';
-	}
-	
-
-
+	die();
 }
+
+
+
+
+
+
+
+
+
+
+
+function makeAnInput($name,$value = '',$required = 1,$display_none = 0){
+	echo '<input type="text" name="'.$name.'" ';
+	if( $value != ''){
+		echo 'value="'.$value.'" ';
+	}
+	if ($required == 1) {
+		echo 'required ';
+	}
+	if($display_none == 1){
+		echo 'style="display: none;" ';
+	}
+	echo '>';
+}
+
+
+
+
 
 
 
@@ -758,7 +939,7 @@ function getPrimaryKeyName($table_name){
 	$sql="SHOW KEYS FROM $table_name WHERE Key_name = 'PRIMARY'";
 	$result = $db->query($sql) or die($db->error);
 	$row = $result->fetch_array(MYSQLI_ASSOC);
-	return $row['Table'];
+	return $row['Column_name'];
 }
 
 
@@ -776,6 +957,118 @@ function getLastInsertID(){
 
 
 
+
+function makeSelect($name,$sql,$selected_value=NULL){
+	global $db;
+	echo '<select name="'.$name.'" >';
+
+	//$sql="SELECT DISTINCT stu_grade from student";
+
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echo "<option>no result</option>";
+    } else {
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			$first_key_value=reset($row);
+
+
+			echo '<option value="'.$first_key_value.'" ';
+			if ($first_key_value == $selected_value) {
+				echo 'selected ';
+			}
+			echo '>';
+			if($name=='course_id'){
+				$course_name=getCourseName($first_key_value);	
+				$first_key_value.='-'.$course_name;			
+			}elseif ($name=='tea_id') {
+				$tea_name=getTeacherName($first_key_value);
+				$first_key_value.='-'.$tea_name;
+			}
+			echo $first_key_value.'</option>';
+		}
+	}
+
+	echo '</select>';
+
+}
+
+
+
+
+function echoSelectList($column,$table_name){
+	global $db;
+	$course_name=NULL;
+
+	$sql = "SELECT DISTINCT $column FROM $table_name";
+	echo '<select>';
+
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		echo "<option>No Result</option>";
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			if ($table_name == 'student') {
+				echo '<option value="'.$row[$column].'" selected>'.$row[$column].'</option>';
+			}
+			elseif($table_name == 'course'){
+				$course_name=getCourseName($row[$column]);
+				echo '<option value="'.$row[$column].'" selected>'.$row[$column].'-'.$course_name.'</option>';
+			}elseif($table_name == 'teacher'){
+				$tea_name=getTeacherName($row[$column]);
+				echo '<option value="'.$row[$column].'" selected>'.$row[$column].'-'.$tea_name.'</option>';
+			}
+			
+		}
+	}
+
+	echo '</select>';
+}
+
+
+
+function showAtDetail($user_role){
+	global $db;
+	$tea_id=NULL;
+	
+
+	dev_var_dump('post');
+
+	$stu_grade=NULL;
+	$stu_major=NULL;
+	$course_id=NULL;
+	getProDetail($_POST["pro_id"],$stu_grade,$stu_major,$course_id);
+
+	if ($user_role='admin') {
+		$sql="SELECT go_id from go where 
+		stu_grade='$stu_grade' AND
+		stu_major='$stu_major' AND
+		course_id='$course_id'";
+	}elseif ($user_role='teacher') {
+		$tea_id=$_SESSION['tea_id'];
+		$sql="SELECT go_id from go where 
+		stu_grade='$stu_grade' AND
+		stu_major='$stu_major' AND
+		course_id='$course_id' AND
+		tea_id='$tea_id'";
+	}
+
+	$result = $db->query($sql) or die($db->error);
+
+
+	if ($result->num_rows == 0) {
+		echo_red('no result!');
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			//echo $row['go_id'];
+			noise($row['go_id']);
+
+		}
+	}
+
+
+
+
+}
 
 
 
@@ -800,6 +1093,14 @@ function getNowTime(){
 	date_default_timezone_set('Asia/Shanghai');
 	$now = date('Y-m-d H:i:s', time());
 	return $now;
+}
+
+function paintResult($result){
+	if ($result == '1') {
+		echo '<div style="background:green;color:white;text-align:center;">√<div>';
+	}elseif ($result == '0') {
+		echo '<div style="background:red;color:white;text-align:center;">×<div>';
+	}
 }
 
 
@@ -889,6 +1190,10 @@ function dev_echo_col_name($table_name,$col_name){
 
 function echo_red($str){
 	echo '<span style="color:red;">'.$str.'</span>';
+}
+
+function echo_green($str){
+	echo '<span style="color:green;">'.$str.'</span>';
 }
 
 

@@ -25,14 +25,44 @@ require_once("header.php");
 // 	//echo '<a href="'.$php_self.'">cancel</a>';
 // }
 
-
-
-
 echo getNowTime();
 
+//makeAnInput('a','',1,1);
 
+// $a=getPrimaryKeyName('project');
+// noise($a);
+
+
+
+dev_var_dump('post');
+//inputNewPro('project');
+
+paintResult('1');
 
 ?>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 <div class="modal"><!-- Place at bottom of page --></div>
 <style type="text/css">

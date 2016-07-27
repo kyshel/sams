@@ -14,7 +14,7 @@ $is_online=NULL;
 $stu_grade=NULL;
 $stu_major=NULL;
 $course_id=NULL;
-get_pro_detail_with_id($pro_id,$stu_grade,$stu_major,$course_id);
+getProDetail($pro_id,$stu_grade,$stu_major,$course_id);
 
 $now=getNowTime();
 $go_meta='无';
@@ -51,7 +51,7 @@ for($j=0;$j<$stu_sum;$j++){
 	}
 	$at_meta=$_POST[$at_meta_j];
 
-	echo $stu_id."-".$is_online.'<br>';
+	//echo $stu_id."-".$is_online.'<br>';
 
 	$sql="INSERT INTO attend(go_id, stu_id, at_yes, at_meta) VALUES
 	('$go_id','$stu_id','$is_online','$at_meta')";
@@ -63,10 +63,10 @@ for($j=0;$j<$stu_sum;$j++){
 
 
 
+
+// show result
 echo '<h1>提交成功！'.$stu_grade.'级，'.$stu_major.'专业，'.$course_id.'课，'.$go_time.'的点名结果如下：</h1>';
 
-
-// table --------------------------
 echo '<table class="table-bordered">';
 echo '<tr>';
 			echo '<th>';
@@ -107,7 +107,9 @@ if ($result->num_rows == 0) {
 
 
 			echo '<td>';
-			echo $row['at_yes'];
+
+			paintResult($row['at_yes']);
+
 			echo '</td>';
 
 			echo '<td>';
@@ -118,7 +120,7 @@ if ($result->num_rows == 0) {
 }
 
 
-
+echo '</table>';
 
 
 
