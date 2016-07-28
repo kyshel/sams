@@ -31,8 +31,14 @@
 	},
 	"go":
 	{
-		"pro_id":"工号"
-
+		"go_id":"工号",
+		"pro_id":"计划号",
+		"stu_grade":"年级",
+		"stu_major":"专业",
+		"course_id":"课程代码",
+		"go_time":"点名日期",
+		"go_meta":"备注",
+		"add_time":"录入时间"
 	},
 
 
@@ -46,7 +52,22 @@
 	"at_meta":{
 		"0":"无",
 		"1":"请假"
+	},
+
+	"_comment3": "language",
+	"lang":{
+		"index": "首页",
+		"manage_stu": "学生管理",
+		"manage_teacher": "教师管理",
+		"manage_course": "课程管理",
+		"manage_pro": "设置课程",
+		"manage_go": "考勤管理",
+		"show_at": "考勤查询",
+		"dev": "开发者页面",
+		"add":"点名录入"
 	}
+
+
 }
 
 

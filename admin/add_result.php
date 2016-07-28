@@ -60,7 +60,8 @@ for($j=0;$j<$stu_sum;$j++){
 
 
 // show result
-echo '<h1>提交成功！'.$stu_grade.'级，'.$stu_major.'专业，'.$course_id.'课，'.$go_time.'的点名结果如下：</h1>';
+$course_name=getCourseName($course_id);
+echoGreen('<p>提交成功！'.$stu_grade.'级，'.$stu_major.'专业，'.$course_id.'-'.$course_name.'课，'.$go_time.'的点名结果如下：</p>');
 
 echo '<table class="table-bordered">';
 echo '<tr>';
@@ -89,7 +90,7 @@ if ($result->num_rows == 0) {
 	echo "<h1>No Result</h1>";
 } else {
 	while($row = $result->fetch_array(MYSQLI_ASSOC)){
-		$stu_name=get_stu_name_with_id($row['stu_id']);
+		$stu_name=getStuName($row['stu_id']);
 
 		echo '<tr>';
 			echo '<td>';

@@ -16,10 +16,55 @@ require_once("header.php");
 <?php
 
 
-updateAt();
 
-editAt();
 
+
+
+
+//********get json data 160728,20:56:02
+
+echo getJsonData('_comment2');
+echo "<br>";
+echo getJsonData('go','go_id');
+echo "<br>";
+echo getJsonData('lang','index');
+echo "<br>";
+//!!!!!!!!!!!!!!!!bug!!!!!!!!!!!!!!!
+//echo getJsonData('lang','index',2);
+//!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+echo "<br>";
+
+
+//var_dump(getJsonData('cn','index',1));
+
+//echo en2cn('add');
+
+// $str = file_get_contents('data.json');
+// $array=json_decode($str, true);
+// //noise($array);
+// noise($array['cn']['index'][0]);
+
+
+echo lang('manage_stu');
+//echo getJsonData('lang','add');
+
+
+
+
+
+
+
+//updateAt();
+
+//editAt();
+
+// $a='66';
+
+// echo '<br>';
+// echo 'this is a'.qq($a).' test';
+
+// echo '<br>';
+// echo 'this is a'.ww($a).' test';
 
 
 

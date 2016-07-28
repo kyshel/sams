@@ -259,7 +259,7 @@ function make_a_switch($name,$value,$label_text,$label_width,$on_text,$off_text,
 function make_a_select_for_at_meta($name,$selected_value = NULL){
 	echo '<select name="'.$name.'" required>';
 
-	$array=getArrayFromJsonFile('col_name.json');
+	$array=getArrayFromJsonFile('data.json');
 	$array_at_meta=$array['at_meta'];
 	foreach ($array_at_meta as $key => $value) {
 		//noise($key.$value);
@@ -381,36 +381,33 @@ function showMenuAccordUserRole(){
 		showTeacherMenu();
 	}
 
+	if (DEV_MODE == 1) {
+		echo '<a href="dev.php">dev</a>';
+	}
 	
 }
 
 function showAdminMenu(){
 	echo '
-	<a href="index.php">index</a>  
-	<a href="manage_stu.php">manage_stu</a> 
-	<a href="manage_tea.php">manage_teacher</a> 
-	<a href="manage_course.php">manage_course</a>
-	
-	<a href="manage_pro.php">manage_pro</a>
+	<a href="index.php">'.lang('index').'</a>  
+	<a href="manage_stu.php">'.lang('manage_stu').'</a> 
+	<a href="manage_tea.php">'.lang('manage_teacher').'</a> 
+	<a href="manage_course.php">'.lang('manage_course').'</a>	
+	<a href="manage_pro.php">'.lang('manage_pro').'</a>
 	<a href="manage_go.php">manage_go</a> 
 
 	<a href="show_at.php">show_at</a> 
 	';
-
-	//echo '<a href="dev.php">dev</a>';
 	
 }
 
 function showTeacherMenu(){
 	echo '
-	<a href="index.php">index</a>  
+	<a href="index.php">'.lang('index').'</a>  
 	<a href="add.php">add</a>
 	<a href="show_at.php">show_at</a> 
 	<a href="set_course.php">set_course</a> 
 	';
-
-	//echo '<a href="dev.php">dev</a>';
-	
 }
 
 
@@ -748,7 +745,7 @@ function updateAt(){
 	}
 
 	if ($result == 1) {
-		echo_green('update success');
+		echoGreen('update success');
 	}
 
 }
@@ -800,7 +797,7 @@ function updateEntry($table_name,$primary_key,$primary_key_value){
 
 	$result = $db->query($sql) or die($db->error);
 	if ($result == 1) {
-		echo_green('Update success!');
+		echoGreen('Update success!');
 		//echo "<h5>update success!</h5>";
 	}
 
@@ -887,7 +884,7 @@ function insertEntry($table_name){
 
 	$result = $db->query($sql) or die($db->error);
 	if ($result == 1) {
-		echo_green('Insert success!'); 
+		echoGreen('Insert success!'); 
 		//echo '<a href="'.$php_self.'">cancel</a>';
 	}
 	
@@ -901,7 +898,7 @@ function execDel($table_name,$primary_key,$primary_key_value){
 	WHERE $primary_key = '$primary_key_value' ";
 	$result = $db->query($sql) or die($db->error);
 
-	echo_green("<p>delete $table_name with $primary_key = $primary_key_value  success!</p>");
+	echoGreen("<p>delete $table_name with $primary_key = $primary_key_value  success!</p>");
 	
 }
 
@@ -1210,7 +1207,7 @@ function del_at_with_go_id($go_id){
 	WHERE go_id = '$go_id' ";
 	$db->query($sql) or die($db->error);
 
-	echo_green("<p>del at with go_id = $go_id success!</p>");
+	echoGreen("<p>del at with go_id = $go_id success!</p>");
 }
 
 function getOneResultByOneQuery($sql){
@@ -1519,18 +1516,18 @@ function dev_delay(){
 }
 
 function dev_echo_col_name($table_name,$col_name){
-	if(DEV_MODE == 1){
+	if(LANG == 0){
 		echo $col_name;
 		return;
 	}else{
-		$str = file_get_contents('col_name.json');
+		$str = file_get_contents('data.json');
 		$col_name_array=json_decode($str, true);
 
 		if(isset($col_name_array[$table_name][$col_name])){
 			echo $col_name_array[$table_name][$col_name];
 		}else{
 			echo $col_name;
-			echo_red('check col_name.json file');
+			echo_red('check data.json file');
 		}
 
 	}
@@ -1547,9 +1544,11 @@ function echo_red($str){
 	echo '<span style="color:red;">'.$str.'</span>';
 }
 
-function echo_green($str){
+function echoGreen($str){
 	echo '<span style="color:green;">'.$str.'</span>';
 }
+
+
 
 function makeHideItem($info){
 	echo '<p class="h">'.$info.'</p>';
@@ -1572,5 +1571,91 @@ function getArrayFromJsonFile($file_name){
 	
 }
 
+
+function getValueFromJsonFile($key1,$key2,$ignore_no_value = 0){
+
+
+	$str = file_get_contents('data.json');
+	$array=json_decode($str, true);
+
+	if(!is_array($array)){
+		echo_red('can not read json file, please check file exists, or file format is correct');
+		return ;
+	}
+
+
+	if(isset($array[$key1][$key2])){	
+		return $array[$key1][$key2];
+	}
+	else{
+		if ($ignore_no_value == 0) {
+			echo_red('this value not set');
+			return ;
+		}	
+		
+		return 'not_set';
+	}
+
+
+}
+
+
+// json deep is 3
+// !!!!!!!!!!! bug !!!!!!!!!!!!!
+// if $key3 is num, it will return unknown value
+//>>>>repair : make sure data.json acurrate index array ,  never no complete
+function getJsonData($key1,$key2 = NULL,$key3 = NULL,$ignore_no_value = 0){
+	$str = file_get_contents('data.json');
+	$array=json_decode($str, true);
+
+	if(!is_array($array)){
+		echo_red('can not read json file, please check file exists, or file format is correct');
+		return ;
+	}
+
+	if(isset($array[$key1][$key2][$key3]) && $key3 !== NULL){
+		//noise('bug');
+		return $array[$key1][$key2][$key3];
+	}
+	else if(isset($array[$key1][$key2]) && $key2 !== NULL && $key3 === NULL){	
+		return $array[$key1][$key2];
+	}
+	else if( isset($array[$key1]) && $key2 === NULL && $key3 === NULL){
+		return $array[$key1];
+	}
+
+	else{
+		if ($ignore_no_value == 0) {
+			echo_red('this value not set');
+		}			
+		return 'not_set';
+	}
+
+
+}
+
+
+
+
+function lang($en){
+	if(LANG == 0){
+		return $en;
+	}else{
+		$text = getJsonData('lang',$en,NULL,1);
+		if ($text == 'not_set') {
+			return $en;
+		}
+	 	return $text;
+	}
+
+	//************wait for add gm
+	// else(){
+	// 	$array_index=LANG - 1;
+	// 	$text = getJsonData('lang',$en,LANG);
+	// 	return $text;
+	// }
+	
+	
+}
 
 
