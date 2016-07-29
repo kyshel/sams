@@ -1,16 +1,6 @@
 <input type="text" id="datepicker" name="date" value="<?php echo date("Y-m-d");?>">
 
-
-<script type="text/javascript">
-	$('#datepicker0').datepicker({
-		format: "yyyy-mm-dd",
-		autoclose: true,
-	});
-</script>
-
-
-
-<script>
+<script id="dp_run">
 var active_dates = [
 <?php
 /* 
@@ -19,7 +9,10 @@ var active_dates = [
 "2016-04-17",
 */
 //must has the db connection before
-$sql="SELECT DISTINCT go_time FROM go";
+
+$sql="SELECT DISTINCT go_time FROM go WHERE
+ stu_grade='$stu_grade' and stu_major='$stu_major' and course_id='$course_id' ";
+
 $result = $db->query($sql) or die($db->error);
 while($row = $result->fetch_array(MYSQLI_ASSOC)){
         echo '"' .$row['go_time'].'",' ;

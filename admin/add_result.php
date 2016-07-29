@@ -11,19 +11,21 @@ $go_id=NULL;
 $stu_id=NULL;
 $is_online=NULL;
 
+
 $stu_grade=NULL;
 $stu_major=NULL;
 $course_id=NULL;
 getProDetail($pro_id,$stu_grade,$stu_major,$course_id);
 
-$now=getNowTime();
+$tea_id=$_SESSION['tea_id'];
 $go_meta='无';
+$now=getNowTime();
 
 //insert go
 check_go_unique('','');
 $sql="INSERT INTO 
-go(pro_id,stu_grade,stu_major,course_id,go_time,go_meta,add_time)VALUES
-('$pro_id','$stu_grade','$stu_major','$course_id','$go_time','$go_meta','$now')
+go(pro_id,stu_grade,stu_major,course_id,tea_id,go_time,go_meta,add_time)VALUES
+('$pro_id','$stu_grade','$stu_major','$course_id','$tea_id','$go_time','$go_meta','$now')
 ";
 $db->query($sql) or die($db->error);
 
@@ -127,4 +129,7 @@ echo '</table>';
 
 
 ?>
+
+<a href="add.php">继续录入</a>
+
 

@@ -15,6 +15,14 @@ require_once("header.php");
 
 <?php
 
+echoSelectForAddedGo('a','SELECT distinct stu_grade,stu_major,course_id from go');
+
+//>>>>>>>>>>>160729,10:17:38
+echo "<br>";
+getProDetail(1,$stu_grade,$stu_major,$course_id);
+$sql="SELECT DISTINCT go_time FROM go WHERE
+ stu_grade='$stu_grade' and stu_major='$stu_major' and course_id='$course_id' ";
+ echo $sql; 
 
 
 
@@ -22,7 +30,7 @@ require_once("header.php");
 
 
 //********get json data 160728,20:56:02
-
+echo "<br>";
 echo getJsonData('_comment2');
 echo "<br>";
 echo getJsonData('go','go_id');

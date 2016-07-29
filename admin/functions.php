@@ -54,7 +54,7 @@ function check_phpversion_for_hash(){
 function teacher_get_own_course($tea_id){
 	global $db;
 	$course_id=NULL;
-	echo '<select name="pro_id" required>';
+	echo '<select name="pro_id" required onchange="showAddedDate(this.value)" id="course_list">';
 
 	$sql="SELECT pro_id,stu_grade,stu_major,course_id 
 	from project
@@ -303,6 +303,26 @@ function check_go_unique($pro_id,$go_time){
 	//echo "<h1>---wait to add check code---</h1>";
 }
 
+function checkGoUnique($stu_grade,$stu_major,$course_id,$go_time){
+	global $db;
+	$sql="SELECT * FROM go WHERE
+	stu_grade='$stu_grade' 
+	and stu_major='$stu_major' 
+	and course_id='$course_id' 
+	and go_time='$go_time' ";
+
+	$result=$db->query($sql) or die($db->error);
+	if ($result->num_rows != 0) {
+		$warn=red('record exists!');
+		$warn.='<br><a href="add.php">back to rechoose</a>';
+		die($warn);
+		return 0;
+	} else {		
+		return 1;
+	}
+
+}
+
 
 
 function getCourseName($course_id){
@@ -382,7 +402,7 @@ function showMenuAccordUserRole(){
 	}
 
 	if (DEV_MODE == 1) {
-		echo '<a href="dev.php">dev</a>';
+		echo '<a href="dev.php">'.lang('dev').'</a>';
 	}
 	
 }
@@ -394,9 +414,9 @@ function showAdminMenu(){
 	<a href="manage_tea.php">'.lang('manage_teacher').'</a> 
 	<a href="manage_course.php">'.lang('manage_course').'</a>	
 	<a href="manage_pro.php">'.lang('manage_pro').'</a>
-	<a href="manage_go.php">manage_go</a> 
+	<a href="manage_go.php">'.lang('manage_go').'</a> 
 
-	<a href="show_at.php">show_at</a> 
+	<a href="show_at.php">'.lang('show_at').'</a> 
 	';
 	
 }
@@ -404,9 +424,9 @@ function showAdminMenu(){
 function showTeacherMenu(){
 	echo '
 	<a href="index.php">'.lang('index').'</a>  
-	<a href="add.php">add</a>
-	<a href="show_at.php">show_at</a> 
-	<a href="set_course.php">set_course</a> 
+	<a href="add.php">'.lang('add').'</a>
+	<a href="show_at.php">'.lang('show_at').'</a> 
+	<a href="set_course.php">'.lang('set_course').'</a> 
 	';
 }
 
@@ -1287,6 +1307,62 @@ function makeSelect($name,$sql,$selected_value=NULL){
 
 }
 
+function echoSelectForAddedGo($name,$sql){
+	global $db;
+	echo '<select name="'.$name.'" >';
+
+	//$sql="SELECT DISTINCT stu_grade from student";
+
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echo "<option>no result</option>";
+    } else {
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			$stu_grade=$row['stu_grade'];
+			$stu_major=$row['stu_major'];
+			$course_id=$row['course_id'];
+			$course_name=getCourseName($course_id);
+
+			if (isset($row['tea_id'])) {
+				$tea_name=getTeacherName($row['tea_id']);
+				$text=$stu_grade.'-'.$stu_major.'-'.$course_name.'-'.$tea_name;
+			}else{
+				$text=$stu_grade.'-'.$stu_major.'-'.$course_name;
+			}
+			
+			
+			$go_id=getOneResultByOneQuery("SELECT go_id from go where stu_grade ='$stu_grade' and stu_major = '$stu_major' and course_id = '$course_id'");
+
+			makeOption($go_id,$text);
+
+
+
+
+
+		}
+	}
+	echo '</select>';
+
+}
+
+function makeInput($name,$value = '',$required = 1,$display_none = 0){
+	$str= '<input type="text" name="'.$name.'" ';
+	if( $value != ''){
+		$str.= 'value="'.$value.'" ';
+	}
+	if ($required == 1) {
+		$str.= 'required ';
+	}
+	if($display_none == 1){
+		$str.= 'style="display: none;" ';
+	}
+	$str.= '>';
+
+	return $str;
+}
+
+
+
 
 
 
@@ -1332,6 +1408,10 @@ function showAtDetail($user_role){
 	$stu_major=NULL;
 	$course_id=NULL;
 	getProDetail($_POST["pro_id"],$stu_grade,$stu_major,$course_id);
+	//$stu_grade=$_POST["stu_grade"];
+	//$stu_major=$_POST["stu_major"];
+	//$course_id=$_POST["course_id"];
+
 
 	if ($user_role=='admin') {
 		$sql="SELECT go_id,go_time from go where 
@@ -1534,6 +1614,9 @@ function dev_echo_col_name($table_name,$col_name){
 }
 
 
+function red($str){
+	return '<span style="color:red;">'.$str.'</span>';
+}
 
 
 

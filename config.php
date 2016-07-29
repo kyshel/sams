@@ -26,4 +26,4 @@ define("DEV_MODE",1);
  * 0 en
  * 1 cn 
  */
-define("LANG",0);
+define("LANG",1);

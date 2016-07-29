@@ -8,3 +8,8 @@
 .h{
 	display: none;
 }
+
+/* date picker */
+.activeClass{
+		background: #5CB85C; 
+}
