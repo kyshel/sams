@@ -1,3 +1,7 @@
+
+
+
+
 <input type="text" id="datepicker" name="date" value="<?php echo date("Y-m-d");?>">
 
 <script id="dp_run">
@@ -22,8 +26,8 @@ while($row = $result->fetch_array(MYSQLI_ASSOC)){
 
 
 $('#datepicker').datepicker({
-	format: "yyyy-mm-dd",
-	autoclose: true,
+  format: "yyyy-mm-dd",
+  autoclose: true,
      /*todayHighlight: true,*/
 
 // >>>>>>>>>>>>>Below is tomorrow code
@@ -34,22 +38,22 @@ endDate: "<?php echo date("Y-m-d");?>",
 
 
 beforeShowDay: function(date){
-	var d = date;
-	var curr_date = d.getDate();
+  var d = date;
+  var curr_date = d.getDate();
          var curr_month = d.getMonth() + 1; //Months are zero based
          if(curr_month<10){
-         	curr_month="0"+curr_month
+          curr_month="0"+curr_month
          }
          if(curr_date<10){
-         	curr_date="0"+curr_date
+          curr_date="0"+curr_date
          }
          var curr_year = d.getFullYear();
          var formattedDate = curr_year + "-" + curr_month + "-" + curr_date
 
          if ($.inArray(formattedDate, active_dates) != -1){
-         	return {
-         		classes: 'activeClass'
-         	};
+          return {
+            classes: 'activeClass'
+          };
          }
          return;
 
@@ -64,7 +68,7 @@ beforeShowDay: function(date){
 
 
 <style type="text/css">
-	.activeClass{
-		background: #5CB85C; 
-	}
+  .activeClass{
+    background: #5CB85C; 
+  }
 </style>

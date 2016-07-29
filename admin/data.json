@@ -26,8 +26,8 @@
 		"pro_id":"计划号",
 		"stu_grade":"年级",
 		"stu_major":"专业",
-		"course_id":"课程代码",
-		"tea_id":"老师"
+		"course_id":"课程代码-课程名",
+		"tea_id":"工号-教师名"
 	},
 	"go":
 	{
@@ -35,7 +35,8 @@
 		"pro_id":"计划号",
 		"stu_grade":"年级",
 		"stu_major":"专业",
-		"course_id":"课程代码",
+		"course_id":"课程代码-课程名",
+		"tea_id":"工号-教师名",
 		"go_time":"点名日期",
 		"go_meta":"备注",
 		"add_time":"录入时间"
@@ -60,7 +61,7 @@
 		"manage_stu": "学生管理",
 		"manage_teacher": "教师管理",
 		"manage_course": "课程管理",
-		"manage_pro": "设置课程",
+		"manage_pro": "计划管理",
 		"manage_go": "考勤管理",
 		"show_at": "查询",
 		"dev": "开发者页面",

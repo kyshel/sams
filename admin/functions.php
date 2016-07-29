@@ -209,7 +209,7 @@ function generate_stu_list($pro_id){
 				// echo '</td>';
 			
 				echo '<td>';
-				make_a_switch('check'.$i,$row['stu_id'],$row['stu_name'],'42px','√','×','success','danger');
+				make_a_switch('check'.$i,$row['stu_id'],$row['stu_name'],'42px','✔','✘','success','danger');
 				echo '</td>';
 
 				echo '<td>';
@@ -462,10 +462,15 @@ if ($result->num_rows == 0) {
 		}
 		echo "<tr>";
 		foreach($row as $x=>$x_value) {
-			if( ($x == 'course_id') && ($php_self=='set_course.php'||$php_self=='manage_pro.php') ){
+			if( ($x == 'course_id') && ($php_self=='set_course.php'||$php_self=='manage_pro.php'||$php_self=='manage_go.php') ){
 				$course_name=getCourseName($x_value);
 				echo "<td>" .$x_value."-".$course_name."</td>" ;
-			}else{
+			}
+			else if (($x == 'tea_id') && ($php_self=='set_course.php'||$php_self=='manage_pro.php'||$php_self=='manage_go.php')) {
+				$tea_name=getTeacherName($x_value);
+				echo "<td>" .$x_value."-".$tea_name."</td>" ;
+			}
+			else{
 				echo "<td>" .$x_value."</td>" ;
 			}
 			
@@ -697,7 +702,7 @@ function editAt($go_id = '28'){
 			
 				echo '<td>';
 				$stu_name=getStuName($row['stu_id']);
-				make_a_switch('check'.$i,$row['stu_id'],$stu_name,'42px','√','×','success','danger',$row['at_yes']);
+				make_a_switch('check'.$i,$row['stu_id'],$stu_name,'42px','✔','✘','success','danger',$row['at_yes']);
 				echo '</td>';
 
 				echo '<td>';
@@ -713,6 +718,8 @@ function editAt($go_id = '28'){
 	echo '<input name="stu_sum" value="'.$i.'" style="display:none;" >';
 
 	echo '<input type="submit" name="update_at_submit" value="保存修改">';
+	echo '&nbsp;';
+	echo '<a href="'.$php_self.'">cancel</a>';
 	echo '</form>';
 
 	//echo '';
@@ -921,6 +928,8 @@ function execDel($table_name,$primary_key,$primary_key_value){
 	echoGreen("<p>delete $table_name with $primary_key = $primary_key_value  success!</p>");
 	
 }
+
+
 
 //			<th> </th>
 function echoTableHead($table_name,$sql,$need_op = 0){
@@ -1397,37 +1406,34 @@ function echoSelectList($column,$table_name){
 
 
 
-function showAtDetail($user_role){
+function showAtDetail(){
 	global $db;
-	$tea_id=NULL;
-	
 
+	$tea_id=NULL;
 	dev_var_dump('post');
 
 	$stu_grade=NULL;
 	$stu_major=NULL;
 	$course_id=NULL;
-	getProDetail($_POST["pro_id"],$stu_grade,$stu_major,$course_id);
-	//$stu_grade=$_POST["stu_grade"];
-	//$stu_major=$_POST["stu_major"];
-	//$course_id=$_POST["course_id"];
-
-
-	if ($user_role=='admin') {
-		$sql="SELECT go_id,go_time from go where 
-		stu_grade='$stu_grade' AND
-		stu_major='$stu_major' AND
-		course_id='$course_id' ORDER BY go_time ASC
-		";
-	}elseif ($user_role=='teacher') {
-		//$tea_id=$_SESSION['tea_id'];
-		//noise($tea_id);
-		$sql="SELECT go_id,go_time from go where 
-		stu_grade='$stu_grade' AND
-		stu_major='$stu_major' AND
-		course_id='$course_id' ORDER BY go_time ASC
-		";
+	if (isset($_POST["pro_id"])) {
+		getProDetail($_POST["pro_id"],$stu_grade,$stu_major,$course_id);
+	}elseif (isset($_POST["go_id"])) {
+		$go_time=NULL;
+		$add_time=NULL;
+		getGoDetail($_POST["go_id"],$stu_grade,$stu_major,$course_id,$go_time,$add_time);
+	}elseif (isset($_GET["pro_id"])) {
+		getProDetail($_GET["pro_id"],$stu_grade,$stu_major,$course_id);
 	}
+	
+	$course_name=getCourseName($course_id);
+	echo s($stu_grade).'级，'.s($stu_major).'专业，'.s($course_name).'课的所有点名如下所示：';
+
+
+	$sql="SELECT go_id,go_time from go where 
+	stu_grade='$stu_grade' AND
+	stu_major='$stu_major' AND
+	course_id='$course_id' ORDER BY go_time ASC
+	";
 
 
 	echo '<table class="table-bordered">';
@@ -1497,7 +1503,7 @@ function showAtDetail($user_role){
 	// <<<<<<<<<<<<     table body       <<<<<<<<<<<<<<<<<
 	echo '</table>';
 
-	echo '';
+	echo '<a href="show_at.php">继续查询</a>';
 }
 
 
@@ -1527,9 +1533,9 @@ function getNowTime(){
 
 function paintResult($result){
 	if ($result == '1') {
-		echo '<div style="background:green;color:white;text-align:center;">√</div>';
+		echo '<div style="background:#5cb85c;color:white;text-align:center;">✔</div>';
 	}elseif ($result == '0') {
-		echo '<div style="background:red;color:white;text-align:center;">×</div>';
+		echo '<div style="background:red;color:white;text-align:center;">✘</div>';
 	}
 }
 
@@ -1616,6 +1622,11 @@ function dev_echo_col_name($table_name,$col_name){
 
 function red($str){
 	return '<span style="color:red;">'.$str.'</span>';
+}
+
+function s($str){
+	//return '<strong style="color:green;">'.$str.'</strong>';
+	return '<strong>'.$str.'</strong>';
 }
 
 

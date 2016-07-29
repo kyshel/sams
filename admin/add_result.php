@@ -63,7 +63,9 @@ for($j=0;$j<$stu_sum;$j++){
 
 // show result
 $course_name=getCourseName($course_id);
-echoGreen('<p>提交成功！'.$stu_grade.'级，'.$stu_major.'专业，'.$course_id.'-'.$course_name.'课，'.$go_time.'的点名结果如下：</p>');
+echoGreen('提交成功！');
+echo '<br>';
+echo s($stu_grade).'级，'.s($stu_major).'专业，'.s($course_name).'课，'.s($go_time).'的点名结果如下：';
 
 echo '<table class="table-bordered">';
 echo '<tr>';
@@ -87,6 +89,7 @@ echo '</tr>';
 $sql="SELECT stu_id,at_yes,at_meta 
 from attend
 where go_id = '$go_id'";
+
 $result = $db->query($sql);
 if ($result->num_rows == 0) {
 	echo "<h1>No Result</h1>";
@@ -131,5 +134,6 @@ echo '</table>';
 ?>
 
 <a href="add.php">继续录入</a>
+<a href="show_at.php?pro_id=<?php echo $pro_id;?>">查看此课程的所有点名</a>
 
 

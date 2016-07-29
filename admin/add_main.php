@@ -13,8 +13,9 @@ $stu_major=NULL;
 $course_id=NULL;
 getProDetail($_POST["pro_id"],$stu_grade,$stu_major,$course_id);
 checkGoUnique($stu_grade,$stu_major,$course_id,$_POST["date"]);
+$course_name=getCoursename($course_id);
 
-echo '<p>您选择的年级为'.$stu_grade.'级，专业为'.$stu_major.'，课程为'.$course_id.'，日期为'.$_POST["date"].'：
+echo '<p>您选择的年级为'.s($stu_grade).'级，专业为'.s($stu_major).'，课程为'.s($course_name).'，日期为'.s($_POST["date"]).'：
 </p>';
 ?>
 

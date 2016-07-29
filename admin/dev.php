@@ -15,7 +15,18 @@ require_once("header.php");
 
 <?php
 
-echoSelectForAddedGo('a','SELECT distinct stu_grade,stu_major,course_id from go');
+
+
+
+
+
+
+
+
+
+
+
+//echoSelectForAddedGo('a','SELECT distinct stu_grade,stu_major,course_id from go');
 
 //>>>>>>>>>>>160729,10:17:38
 echo "<br>";
@@ -174,3 +185,6 @@ $(document).on({
      ajaxStop: function() { $body.removeClass("loading"); }    
 });
 </script>
+
+
+
