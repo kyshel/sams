@@ -1022,7 +1022,7 @@ function editProjectEntry($table_name,$primary_key,$primary_key_value){
 
 
 
-function inputNewPro($table_name,$user_role=NULL){
+function inputNewPro2($table_name,$user_role=NULL){
 	global $db;
 	//$sql="SELECT stu_grade,stu_major,course_id from $table_name";
 	$php_self=php_self();
@@ -1033,6 +1033,8 @@ function inputNewPro($table_name,$user_role=NULL){
 	}elseif($user_role=='teacher'){
 		$sql="SELECT stu_grade,stu_major,course_id from $table_name";
 	}
+
+	//$sql="SELECT stu_grade,stu_major,course_id from $table_name";
 
 	echo '<form method="post" action="'.$php_self.'?op=insert">';
 	echo "<table class='table-bordered'>";
@@ -1104,6 +1106,75 @@ function inputNewPro($table_name,$user_role=NULL){
 	die();
 }
 
+function inputNewPro($table_name,$user_role=NULL){
+	global $db;
+	//$sql="SELECT stu_grade,stu_major,course_id from $table_name";
+	$php_self=php_self();
+	$tea_id=$_SESSION['tea_id'];
+
+	// if ($user_role=='admin') {
+	// 	$sql="SELECT stu_grade,stu_major,course_id,tea_id from $table_name";
+	// }elseif($user_role=='teacher'){
+	// 	$sql="SELECT stu_grade,stu_major,course_id from $table_name";
+	// }
+
+	//$sql="SELECT stu_grade,stu_major,course_id from $table_name";
+	//noise($sql);
+
+	echo '<form method="post" action="'.$php_self.'?op=insert">';
+	echo "<table class='table-bordered'>";
+		echo "<tr>";
+			echo '<th>course_id</th>';
+			echo '<th>year</th>';
+			echo '<th>term</th>';
+			echo '<th>tea_id</th>';
+			echo '<th>stu_grade</th>';
+			echo '<th>stu_major</th>';
+		echo "</tr>";
+
+		echo "<tr>";
+			echo '<td>';
+			makeSelect('course_id',"SELECT DISTINCT course_id from course");
+			echo '</td>';
+
+			echo '<td>';
+			//makeSelect('course_id',"SELECT DISTINCT course_id from course");
+			echo '</td>';
+
+			echo '<td>';
+			//makeSelect('course_id',"SELECT DISTINCT course_id from course");
+			echo '</td>';
+
+			echo '<td>';
+			makeSelect('tea_id',"SELECT DISTINCT tea_id from teacher");
+			echo '</td>';
+
+			echo '<td>';
+			makeSelect('stu_grade',"SELECT DISTINCT stu_grade from student ",'','不区分年级');
+			echo '</td>';
+
+			echo '<td>';
+			makeSelect('stu_major',"SELECT DISTINCT stu_major from student ",'','不区分专业');
+			echo '</td>';
+
+
+		echo "</tr>";
+
+
+
+
+	echo "</table>";
+
+	makeAnInput('tea_id',$tea_id,1,1);
+
+	echo '<input type="submit" value="insert">';
+	echo '&nbsp;';
+	echo '<a href="'.$php_self.'">cancel</a>';
+
+	echo "</form>";
+
+	die();
+}
 
 
 
@@ -1222,13 +1293,6 @@ function makeAnInput($name,$value = '',$required = 1,$display_none = 0){
 
 
 
-
-
-
-
-
-
-
 function del_at_with_go_id($go_id){
 	global $db;
 
@@ -1285,7 +1349,7 @@ function getLastInsertID(){
 
 
 
-function makeSelect($name,$sql,$selected_value=NULL){
+function makeSelect($name,$sql,$selected_value=NULL,$empty_tip='not_set'){
 	global $db;
 	echo '<select name="'.$name.'" >';
 
@@ -1295,6 +1359,11 @@ function makeSelect($name,$sql,$selected_value=NULL){
 	if ($result->num_rows == 0) {
 		echo "<option>no result</option>";
     } else {
+
+    	if($empty_tip != 'not_set'){
+    		echo '<option value="none" selected>'.$empty_tip.'</option>';
+    	}
+
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
 			$first_key_value=reset($row);
 
@@ -1307,6 +1376,8 @@ function makeSelect($name,$sql,$selected_value=NULL){
 			}else{
 				$text=$first_key_value;
 			}
+
+			
 
 			makeOption($first_key_value,$text,$selected_value);
 		}

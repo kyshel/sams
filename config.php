@@ -14,12 +14,12 @@
 define("DB_HOST", "localhost");
 define("DB_NAME", "sams");
 define("DB_USER", "root");
-define("DB_PASS", "Aa123123");
+define("DB_PASS", "123");
 
 /**
  * dev mode
  */
-define("DEV_MODE",0);
+define("DEV_MODE",1);
 
 /**
  * LANG  see data.json
