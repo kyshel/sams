@@ -90,6 +90,37 @@ function teacher_get_own_course($tea_id){
 }
 
 // generate a select course list that belong to logined teacher
+function echoMyCourseSelect($tea_id){
+	global $db;
+	$course_id=NULL;
+	echo '<select name="pro_id" required  id="course_list">';
+
+	$sql="SELECT pro_id,course_id,year,term
+	from project
+	where tea_id = $tea_id";
+
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echo "<option>Please add your course first</option>";
+    } else {
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			$course_id = $row['course_id'] ;
+			$course_name = getCourseName($course_id);
+			
+			echo "<option value='".$row['pro_id']."'>" 
+			. $course_name."，"
+			. $row['year']."学年，第"
+			. $row['term']."学期"
+			. "</option>";
+		}
+	}
+
+	echo '</select>';
+}
+
+
+
+// generate a select course list that belong to logined teacher
 function makeSelectForPro(){
 	global $db;
 
@@ -445,7 +476,11 @@ echoTableHead($table_name,$sql,1);
 
 $result = $db->query($sql);
 if ($result->num_rows == 0) {
-	echo "<h1>No Result</h1>";
+	if ($table_name == 'project') {
+		echo_red('未设置课程，请添加！');
+	}else{
+		echo "<h1>No Result</h1>";
+	}	
 } else {		
 	while($row = $result->fetch_array(MYSQLI_ASSOC)){
 		if($i == 0){
@@ -475,9 +510,18 @@ if ($result->num_rows == 0) {
 			}
 			
 		}
+
+			if ($table_name=='project') {
+				echo "<td>"; 
+				echo '<a href="set_student.php?&'.$primary_key.'='.$row[$primary_key].'">';
+				echoAddStudentOrSet($row[$primary_key]);
+				echo '</a>';
+				echo '&nbsp;';
+			}else{
 			echo "<td>"; 
 			echo '<a href="'.$php_self.'?op=edit&'.$primary_key.'='.$row[$primary_key].'">edit</a>';
 			echo '&nbsp;';
+			}
 
 			echo '<a href="'.$php_self.'?op=del&'.$primary_key.'='.$row[$primary_key].'" onclick="';
 			echo "return confirm('Are you sure you want to delete this item?');";
@@ -938,7 +982,9 @@ function echoTableHead($table_name,$sql,$need_op = 0){
 	$i = 0;
 	$result = $db->query($sql) ;
 	if ($result->num_rows == 0) {
-		echo "<h1>No Result</h1>";
+		if (DEV_MODE == 1) {
+			echo_red("Table Head No Result");
+		}		
 	} else {		
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
 			if($i == 0){
@@ -1108,28 +1154,17 @@ function inputNewPro2($table_name,$user_role=NULL){
 
 function inputNewPro($table_name,$user_role=NULL){
 	global $db;
-	//$sql="SELECT stu_grade,stu_major,course_id from $table_name";
 	$php_self=php_self();
-	$tea_id=$_SESSION['tea_id'];
-
-	// if ($user_role=='admin') {
-	// 	$sql="SELECT stu_grade,stu_major,course_id,tea_id from $table_name";
-	// }elseif($user_role=='teacher'){
-	// 	$sql="SELECT stu_grade,stu_major,course_id from $table_name";
-	// }
-
-	//$sql="SELECT stu_grade,stu_major,course_id from $table_name";
-	//noise($sql);
 
 	echo '<form method="post" action="'.$php_self.'?op=insert">';
 	echo "<table class='table-bordered'>";
 		echo "<tr>";
 			echo '<th>course_id</th>';
 			echo '<th>year</th>';
-			echo '<th>term</th>';
-			echo '<th>tea_id</th>';
+			echo '<th>term</th>';			
 			echo '<th>stu_grade</th>';
 			echo '<th>stu_major</th>';
+			echo '<th>tea_id</th>';
 		echo "</tr>";
 
 		echo "<tr>";
@@ -1138,24 +1173,43 @@ function inputNewPro($table_name,$user_role=NULL){
 			echo '</td>';
 
 			echo '<td>';
-			//makeSelect('course_id',"SELECT DISTINCT course_id from course");
+			echo '
+			<select name="year">
+				<option>2016-2017</option>
+			</select>
+			';
+			
 			echo '</td>';
 
 			echo '<td>';
-			//makeSelect('course_id',"SELECT DISTINCT course_id from course");
+			echo '
+			<select name="term">
+				<option>1</option>
+				<option>2</option>
+			</select>
+			';
+
+			echo '</td>';
+
+			
+
+			echo '<td>';
+			makeSelect('stu_grade',"SELECT DISTINCT stu_grade from student ",'','不分年级');
 			echo '</td>';
 
 			echo '<td>';
-			makeSelect('tea_id',"SELECT DISTINCT tea_id from teacher");
+			makeSelect('stu_major',"SELECT DISTINCT stu_major from student ",'','不分专业');
 			echo '</td>';
 
 			echo '<td>';
-			makeSelect('stu_grade',"SELECT DISTINCT stu_grade from student ",'','不区分年级');
+			if ($user_role == 'teacher') {
+				$tea_id=$_SESSION['tea_id'];				
+				makeSelect('tea_id',"SELECT tea_id from teacher where tea_id='$tea_id' ");
+			}else{
+				makeSelect('tea_id',"SELECT DISTINCT tea_id from teacher");				
+			}
 			echo '</td>';
-
-			echo '<td>';
-			makeSelect('stu_major',"SELECT DISTINCT stu_major from student ",'','不区分专业');
-			echo '</td>';
+			
 
 
 		echo "</tr>";
@@ -1165,7 +1219,7 @@ function inputNewPro($table_name,$user_role=NULL){
 
 	echo "</table>";
 
-	makeAnInput('tea_id',$tea_id,1,1);
+	
 
 	echo '<input type="submit" value="insert">';
 	echo '&nbsp;';
@@ -1361,7 +1415,7 @@ function makeSelect($name,$sql,$selected_value=NULL,$empty_tip='not_set'){
     } else {
 
     	if($empty_tip != 'not_set'){
-    		echo '<option value="none" selected>'.$empty_tip.'</option>';
+    		echo '<option value="'.$empty_tip.'" selected>'.$empty_tip.'</option>';
     	}
 
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
@@ -1581,17 +1635,6 @@ function showAtDetail(){
 
 
 
-//****************** below are dev func *********************************
-
-// function del_go($go_id){
-// 	global $db;
-
-// 	$sql="DELETE FROM go
-// 	WHERE go_id = '$go_id' ";
-// 	$db->query($sql) or die($db->error);
-
-// 	echo "<h1>del go with go_id success!</h1>";
-// }
 
 
 
@@ -1612,10 +1655,94 @@ function paintResult($result){
 
 
 
+function makeTableForAddStudent($pro_id){
+	global $db;
+
+	echo '<table class="table-bordered">';
+	$sql="SELECT * FROM student";
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		echo_red('no result!Please add students');
+		die();
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			echo '<tr>';
+			$stu_id=$row['stu_id'];
+			echo '<td>'.$stu_id.'</td>';
+			echo '<td>'.$row['stu_name'].'</td>';
+			
+			checkAddedStu($pro_id,$stu_id);
+			
+			echo '</tr>'; 
+		}		
+	}
+	echo '</table>';
+}
+
+function checkAddedStu($pro_id,$stu_id){
+	global $db;
+	$sql="SELECT stu_id FROM attend where pro_id= '$pro_id' and stu_id = '$stu_id' ";
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		echo '<td>'.'<button onclick="add(this.value)" value="'.$stu_id.'">add</button>'.'</td>';
+	} else {		
+		echo '<td>'.'<button disabled>added</button>'.'</td>';
+	}
+
+}
+
+function makeTableForAddedStudent($pro_id){
+	global $db;
+
+	echo '<table class="table-bordered">';
+	$sql="SELECT stu_id FROM attend where pro_id= '$pro_id'";
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		echo_red('no result!please add students to here');
+		//die();
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			echo '<tr>';
+			$stu_id=$row['stu_id'];
+			$stu_name=getStuName($stu_id);
+			echo '<td>'.$stu_id.'</td>';
+			echo '<td>'.$stu_name.'</td>';
+			echo '<td>'.'<button onclick="del(this.value)" value="'.$stu_id.'">del</button>'.'</td>';
+			echo '</tr>'; 
+		}		
+	}
+	echo '</table>';
+}
 
 
 
+function insertOne($sql){
+	global $db;
+	$result = $db->query($sql) or die($db->error);
+	if ($result == 1) {
+		echoGreen('Insert success!'); 
+	}
+}
 
+function delOne($sql){
+	global $db;
+	$result = $db->query($sql) or die($db->error);
+	if ($result == 1) {
+		echoGreen('Delete success!'); 
+	}
+}
+
+function echoAddStudentOrSet($pro_id){
+	global $db;
+
+	$sql="SELECT stu_id FROM attend where pro_id= '$pro_id'";
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		echo 'add_student';
+	} else {		
+		echo 'set_student';
+	}
+}
 
 
 

@@ -3,14 +3,11 @@ require_once("header.php");
 ?>
 
 <form action="add_main.php" method="post">
-<p>Please choose:</p>
-
-<p>Course</p>
-<?php teacher_get_own_course($_SESSION['tea_id']);?>
-<p>Date</p>
-<div id="dp_wrapper"></div>
-
+<span>Please choose course:</span>
 <br>
+
+<?php echoMyCourseSelect($_SESSION['tea_id']);?>
+
 <input type="submit" name="add_submit">
 </form>
 
