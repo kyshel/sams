@@ -257,6 +257,65 @@ function generate_stu_list($pro_id){
 
 }
 
+function addNewAt($pro_id){
+	global $db;
+	getProDetail($pro_id,$course_id,$year,$term,$stu_grade,$stu_major,$last_update);
+	$course_name=getCoursename($course_id);
+	$i=0;
+	
+	$sql="SELECT * from attend where pro_id= '$pro_id'";
+	$result = $db->query($sql);
+
+	if ($result->num_rows == 0) {
+		echo "<h1>no students in your course, please add students to your course first</h1>";
+	} else {
+		
+		echo '<p>您选择的课程为：'.$year.'学年'.$term.'学期'.s($course_name).'课,年级为'
+		.s($stu_grade).'，专业为'.s($stu_major).'，最后更新日期为'.s($last_update).'：</p>';
+
+		echo '<table class="table-bordered">';
+			echo '<tr>';
+				echo '<th>';
+				echo '学号';
+				echo '</th>';
+
+				echo '<th>';
+				echo '姓名';
+				echo '</th>';
+
+				echo '<th>';
+				echo '旷课次数';
+				echo '</th>';
+		echo '</tr>';
+
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			$stu_name=getStuName($row['stu_id']);
+			echo '<tr>';
+
+				echo '<td>';
+				echo $row['stu_id'];
+				echo '<input type="text" name="stu_num'.$i.'" value="'.$row['stu_id'].'" style="display: none;">';
+				echo '</td>';
+
+				echo '<td>';
+				echo $stu_name;
+				echo '</td>';
+			
+				echo '<td>';
+				echo '<input type="text" name="no_sum'.$i.'" value="'.$row['no_sum'].'">';
+				echo '</td>';
+
+
+			echo '</tr>';
+			$i++;
+		}
+		echo '</table>';
+	}
+
+	echo '<input name="stu_sum" value="'.$i.'" style="display:none;" >';
+
+}
+
 // label_widht can set 'auto'
 function make_a_switch($name,$value,$label_text,$label_width,$on_text,$off_text,$on_color,$off_color,$switch_checked = NULL){
     echo '<input type="checkbox" 
@@ -392,18 +451,20 @@ function getStuName($stu_id){
 	return $row['stu_name'];
 }
 
-function getProDetail($pro_id,&$stu_grade,&$stu_major,&$course_id){
+function getProDetail($pro_id,&$course_id,&$year,&$term,&$stu_grade,&$stu_major,&$last_update){
 	global $db;
 
-	$sql="SELECT stu_grade,stu_major,course_id
-	from project
-	where pro_id = '$pro_id'";
-	$result = $db->query($sql);
+	$sql="SELECT * from project where pro_id = '$pro_id'";
+	$result = $db->query($sql)  or die($db->error);
 	$row = $result->fetch_array(MYSQLI_ASSOC);
 
+	$course_id=$row['course_id'];
+	$year=$row['year'];
+	$term=$row['term'];
 	$stu_grade=$row['stu_grade'];
 	$stu_major=$row['stu_major'];
-	$course_id=$row['course_id'];
+	$last_update=$row['last_update'];
+
 }
 
 function getGoDetail($go_id,&$stu_grade,&$stu_major,&$course_id,&$go_time,&$add_time){
@@ -433,7 +494,11 @@ function showMenuAccordUserRole(){
 	}
 
 	if (DEV_MODE == 1) {
-		echo '<a href="dev.php">'.lang('dev').'</a>';
+		echo '
+		<a href="dev.php">'.lang('dev').'</a>
+		<a href="add.php">'.lang('add').'</a>
+		<a href="show_at.php">'.lang('show_at').'</a> 
+		';
 	}
 	
 }
@@ -455,8 +520,6 @@ function showAdminMenu(){
 function showTeacherMenu(){
 	echo '
 	<a href="index.php">'.lang('index').'</a>  
-	<a href="add.php">'.lang('add').'</a>
-	<a href="show_at.php">'.lang('show_at').'</a> 
 	<a href="set_course.php">'.lang('set_course').'</a> 
 	';
 }
@@ -510,22 +573,34 @@ if ($result->num_rows == 0) {
 			}
 			
 		}
+			echo "<td>";
 
 			if ($table_name=='project') {
-				echo "<td>"; 
-				echo '<a href="set_student.php?&'.$primary_key.'='.$row[$primary_key].'">';
+				echo '<a href="add_main.php?'.$primary_key.'='.$row[$primary_key].'">'.lang('add_at').'</a>';
+
+				echo '&nbsp;';
+				echo '<a href="show_at.php?'.$primary_key.'='.$row[$primary_key].'">'.lang('show_at').'</a>';
+
+				echo '&nbsp;';
+				echo '<a href="set_student.php?'.$primary_key.'='.$row[$primary_key].'">';
 				echoAddStudentOrSet($row[$primary_key]);
 				echo '</a>';
+
 				echo '&nbsp;';
-			}else{
-			echo "<td>"; 
+				echo '<a href="'.$php_self.'?op=del&'.$primary_key.'='.$row[$primary_key].'" onclick="';
+				echo "return confirm('您确定删除此课程? \\n这将清空所有与此课程相关的点名记录，而且无法撤销！');";
+				echo '">'.red(lang('del')).'</a>';
+
+
+			}else{			 
 			echo '<a href="'.$php_self.'?op=edit&'.$primary_key.'='.$row[$primary_key].'">edit</a>';
 			echo '&nbsp;';
-			}
-
 			echo '<a href="'.$php_self.'?op=del&'.$primary_key.'='.$row[$primary_key].'" onclick="';
 			echo "return confirm('Are you sure you want to delete this item?');";
 			echo '">del</a>';
+			}
+
+			
 
 			echo "</td>" ;
 		echo "</tr>";
@@ -535,11 +610,11 @@ if ($result->num_rows == 0) {
 
 echo '</table>';
 
-if ($table_name == 'go') {
-	echo '';
+if ($table_name == 'project') {
+	echo '<a href="'.php_self().'?op=add'.'"><button>'.lang('add_new_course').'</button></a>';
 }
 else{
-	echo '<a href="'.php_self().'?op=add'.'">add</a>';
+	echo '<a href="'.php_self().'?op=add'.'"><button>add</button></a>';
 }
 
 
@@ -556,8 +631,9 @@ function runOperateWithGet($table_name,$sql,$primary_key){
 			if(isset($_GET[$primary_key])){
 				$primary_key_value=$_GET[$primary_key];
 				execDel($table_name,$primary_key,$primary_key_value);
-				if($table_name == 'go'){
-					del_at_with_go_id($primary_key_value);
+				if($table_name == 'project'){
+					//del_at_with_go_id($primary_key_value);
+					delAttendByPro($primary_key_value);
 				}
 			}
 
@@ -1357,6 +1433,16 @@ function del_at_with_go_id($go_id){
 	echoGreen("<p>del at with go_id = $go_id success!</p>");
 }
 
+function delAttendByPro($pro_id){
+	global $db;
+
+	$sql="DELETE FROM attend
+	WHERE pro_id = '$pro_id' ";
+	$db->query($sql) or die($db->error);
+
+	echoGreen("<p>delete attend with pro_id = $pro_id success!</p>");
+}
+
 function getOneResultByOneQuery($sql){
 	global $db;
 
@@ -1634,7 +1720,61 @@ function showAtDetail(){
 
 
 
+function showAttendTable($pro_id){
+	global $db;
 
+	getProDetail($pro_id,$course_id,$year,$term,$stu_grade,$stu_major,$last_update);
+	$course_name=getCourseName($course_id);
+	echo '<p>'.s($year).'学年'.s($term).'学期'.s($course_name).'课的点名情况如下所示：</p>';
+	//echo '<p>(此课程年级为'.s($stu_grade).'，专业为'.s($stu_major).'，最后更新时间为'.s($last_update).')：</p>';
+
+	$sql="SELECT * from attend where pro_id= '$pro_id'";
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echo "<h1>no students in your course, please add students to your course first</h1>";
+	} else {
+
+		echo '<table class="table-bordered">';
+		echo '<tr>';
+		echo '<th>';
+		echo '学号';
+		echo '</th>';
+
+		echo '<th>';
+		echo '姓名';
+		echo '</th>';
+
+		echo '<th>';
+		echo '旷课次数';
+		echo '</th>';
+		echo '</tr>';
+
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			$stu_name=getStuName($row['stu_id']);
+			echo '<tr>';
+
+			echo '<td>';
+			echo $row['stu_id'];
+			echo '</td>';
+
+			echo '<td>';
+			echo $stu_name;
+			echo '</td>';
+
+			echo '<td>';
+			echo $row['no_sum'];
+			echo '</td>';
+
+
+			echo '</tr>';
+
+		}
+		echo '</table>';
+	}
+
+	// echo '<a href="'.urlencode($_SERVER['REQUEST_URI']).'">返回</a>';
+	
+}
 
 
 
@@ -1658,6 +1798,7 @@ function paintResult($result){
 function makeTableForAddStudent($pro_id){
 	global $db;
 
+	echo '<p>请选择要添加到此课程的学生：</p>';
 	echo '<table class="table-bordered">';
 	$sql="SELECT * FROM student";
 	$result = $db->query($sql) or die($db->error);
@@ -1694,6 +1835,7 @@ function checkAddedStu($pro_id,$stu_id){
 function makeTableForAddedStudent($pro_id){
 	global $db;
 
+	echo '<p>已添加到此课程的学生：</p>';
 	echo '<table class="table-bordered">';
 	$sql="SELECT stu_id FROM attend where pro_id= '$pro_id'";
 	$result = $db->query($sql) or die($db->error);
@@ -1720,7 +1862,7 @@ function insertOne($sql){
 	global $db;
 	$result = $db->query($sql) or die($db->error);
 	if ($result == 1) {
-		echoGreen('Insert success!'); 
+		echoGreen('添加成功!'); 
 	}
 }
 
@@ -1728,7 +1870,7 @@ function delOne($sql){
 	global $db;
 	$result = $db->query($sql) or die($db->error);
 	if ($result == 1) {
-		echoGreen('Delete success!'); 
+		echoGreen('删除成功!'); 
 	}
 }
 
@@ -1738,9 +1880,9 @@ function echoAddStudentOrSet($pro_id){
 	$sql="SELECT stu_id FROM attend where pro_id= '$pro_id'";
 	$result = $db->query($sql) or die($db->error);
 	if ($result->num_rows == 0) {
-		echo 'add_student';
+		echo lang('add_student');
 	} else {		
-		echo 'set_student';
+		echo lang('set_student');
 	}
 }
 
@@ -1935,8 +2077,11 @@ function lang($en){
 	}else{
 		$text = getJsonData('lang',$en,NULL,1);
 		if ($text == 'not_set') {
-			return $en;
-		}
+			if(DEV_MODE == 1){
+				return $en.red('this value not set');
+			}
+			return $en;	
+		}	
 	 	return $text;
 	}
 

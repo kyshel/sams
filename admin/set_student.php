@@ -4,16 +4,15 @@ $pro_id=isset($_GET['pro_id']) ? $_GET['pro_id'] : die(' pro_id is not set');
 //$pro_id='';
 ?>
 
-
+<button onclick="window.history.back()"><<返回</button>
 <div id="select">
 <?php makeTableForAddStudent($pro_id); ?>
 </div>
-
-
-
 <div id="added">
 <?php makeTableForAddedStudent($pro_id) ?>
 </div>
+
+
 
 
 <script type="text/javascript">
@@ -45,6 +44,11 @@ function add(str){
 
 
 function del(str){
+	var confirm_del=confirm('删除此学生将同时删除此学生的旷课记录！\n您确定要删除？');
+	if (confirm_del == false) {
+		return;
+	}
+	
 	var pro_id = getParameterByName('pro_id');
 
 	var req="ajax.php?op=del&stu_id="+str;

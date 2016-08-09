@@ -1,139 +1,46 @@
 <?php
 require_once("header.php");
-
 dev_var_dump('post');
-
-$pro_id=$_POST["pro_id"];
-$go_time=$_POST["date"];
-$stu_sum=$_POST["stu_sum"];
 
 $go_id=NULL;
 $stu_id=NULL;
-$is_online=NULL;
-
-
 $stu_grade=NULL;
 $stu_major=NULL;
 $course_id=NULL;
-getProDetail($pro_id,$stu_grade,$stu_major,$course_id);
+getProDetail($_POST["pro_id"],$course_id,$year,$term,$stu_grade,$stu_major,$old_last_update);
 
-$tea_id=$_SESSION['tea_id'];
-$go_meta='无';
-$now=getNowTime();
+$pro_id=$_POST["pro_id"];
+$update_time=$_POST["update_time"];
+$stu_sum=$_POST["stu_sum"];
 
-//insert go
-check_go_unique('','');
-$sql="INSERT INTO 
-go(pro_id,stu_grade,stu_major,course_id,tea_id,go_time,go_meta,add_time)VALUES
-('$pro_id','$stu_grade','$stu_major','$course_id','$tea_id','$go_time','$go_meta','$now')
-";
+
+$sql="UPDATE project SET last_update= '$update_time' WHERE pro_id = '$pro_id' ";
 $db->query($sql) or die($db->error);
-
-//insert at
-$go_id=getLastInsertID();
-//$go_id=get_go_id($pro_id,$go_time);
-noise('$go_id is:'.$go_id);
-//die();
 for($j=0;$j<$stu_sum;$j++){
 	// make string that match the var name
 	$stu_num_j="stu_num".$j;
-	$check_j="check".$j;
-	$at_meta_j="at_meta".$j;
+	$no_sum_j="no_sum".$j;
 
 	$stu_id=$_POST[$stu_num_j];
-	if (isset($_POST[$check_j])) {
-		$is_online=1;		
-	}else{
-		$is_online=0;
-	}
-	$at_meta=$_POST[$at_meta_j];
+	$no_sum=$_POST[$no_sum_j];
+	$no_sum = (int)$no_sum;
 
-	//echo $stu_id."-".$is_online.'<br>';
+	$sql="UPDATE attend SET no_sum= $no_sum
+	WHERE stu_id='$stu_id' and pro_id = '$pro_id' ";
 
-	$sql="INSERT INTO attend(go_id, stu_id, at_yes, at_meta) VALUES
-	('$go_id','$stu_id','$is_online','$at_meta')";
-
-	$db->query($sql) or die($db->error);
-
-	
+	$db->query($sql) or die($db->error);	
 }
 
 
 
 
 // show result
-$course_name=getCourseName($course_id);
 echoGreen('提交成功！');
-echo '<br>';
-echo s($stu_grade).'级，'.s($stu_major).'专业，'.s($course_name).'课，'.s($go_time).'的点名结果如下：';
-
-echo '<table class="table-bordered">';
-echo '<tr>';
-			echo '<th>';
-			echo '学号';
-			echo '</th>';
-
-			echo '<th>';
-			echo '姓名';
-			echo '</th>';
-
-			echo '<th>';
-			echo '结果';
-			echo '</th>';
-
-			echo '<th>';
-			echo '备注';
-			echo '</th>';
-echo '</tr>';
-
-$sql="SELECT stu_id,at_yes,at_meta 
-from attend
-where go_id = '$go_id'";
-
-$result = $db->query($sql);
-if ($result->num_rows == 0) {
-	echo "<h1>No Result</h1>";
-} else {
-	while($row = $result->fetch_array(MYSQLI_ASSOC)){
-		$stu_name=getStuName($row['stu_id']);
-
-		echo '<tr>';
-			echo '<td>';
-			echo $row['stu_id'];
-			echo '</td>';
-
-			echo '<td>';
-			echo $stu_name;
-			echo '</td>';
-
-
-			echo '<td>';
-
-			paintResult($row['at_yes']);
-
-			echo '</td>';
-
-			echo '<td>';
-			echo $row['at_meta'];
-			echo '</td>';
-		echo '</tr>';
-	}
-}
-
-
-echo '</table>';
-
-
-
-
-
-
-
-
+showAttendTable($pro_id);
 
 ?>
 
-<a href="add.php">继续录入</a>
-<a href="show_at.php?pro_id=<?php echo $pro_id;?>">查看此课程的所有点名</a>
+<a href="set_course.php"><button>返回</button></a>
+
 
 
