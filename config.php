@@ -19,11 +19,11 @@ define("DB_PASS", "123");
 /**
  * dev mode
  */
-define("DEV_MODE",1);
+define("DEV_MODE",0);
 
 /**
  * LANG  see data.json
  * 0 en
  * 1 cn 
  */
-define("LANG",0);
+define("LANG",1);

@@ -1,10 +1,18 @@
 <?php
 require_once("header.php");
 $pro_id=isset($_GET['pro_id']) ? $_GET['pro_id'] : die(' pro_id is not set');
-//$pro_id='';
+
+//echo '<a class="btn btn-default btn-sm" href="set_course.php"><<返回</a>';
+echo '<a href="set_course.php"><<返回</a>';
+//echo '&nbsp';;
+//echo '<a href="add_main.php?pro_id='.$pro_id.'">点名</a>';
+getProDetail($pro_id,$course_id,$year,$term,$stu_grade,$stu_major,$last_update);
+$course_name=getCourseName($course_id);
+echo '<br><span>您选择的课程为：'.s($year).'学年,'.s($term).'学期,'.s($course_name).'</span>';
 ?>
 
-<button onclick="window.history.back()"><<返回</button>
+
+<div style="clear: both;"></div>
 <div id="select">
 <?php makeTableForAddStudent($pro_id); ?>
 </div>
@@ -87,17 +95,17 @@ function getParameterByName(name, url) {
 <style type="text/css">
 	#select{
 		border-style: solid;
-		border-color: red;
+		border-color: #eee;
 		width:400px;
-		height: 400px;
+		
 
 		float: left;
 	}
 	#added{
 		border-style: solid;
-		border-color: green;
+		border-color: #eee;
 		width:400px;
-		height: 400px;
+		
 
 		float: left;
 	}

@@ -20,10 +20,10 @@ require_once("auth.php");
 </head>
 
 <body>
-<div>This is header, 
+<div> 
 U R <?php echo $_SESSION['user_name']; ?>,
 Your Role is <?php echo $_SESSION['user_role']; ?>,
-<a href="login.php?logout">logout</a>
+<a href="login.php?logout">退出</a>
 </div>
 
 <div>

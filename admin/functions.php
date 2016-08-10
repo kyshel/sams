@@ -29,8 +29,9 @@ function exec_kickout_if_timeout(){
         } else {
             $cha=time()-$_SESSION['timeout'];
             $cha_div=$cha / 60 ;
+            $delay_min=$delay / 60;
             echo '
-            <script type="text/javascript">console.log("您距离上一次操作相差'.$cha.'秒，即'.$cha_div.' 分钟，超过60分钟会强制退出！")</script>  
+            <script type="text/javascript">console.log("您距离上一次操作相差'.$cha.'秒，即'.$cha_div.' 分钟，超过'.$delay_min.'分钟会强制退出！")</script>  
             ';
             $_SESSION['timeout'] = time();
             // session ok
@@ -267,10 +268,14 @@ function addNewAt($pro_id){
 	$result = $db->query($sql);
 
 	if ($result->num_rows == 0) {
-		echo "<h1>no students in your course, please add students to your course first</h1>";
+		$add_student_link='<a href="set_student.php?pro_id='.$pro_id.'">'.lang('add_student').'</a>';
+		echo_red('您课程中没有学生, 请'.$add_student_link.'后，再来点名');
+		
+
+		die();
 	} else {
 		
-		echo '<p>您选择的课程为：'.$year.'学年'.$term.'学期'.s($course_name).'课,年级为'
+		echo '<p>您选择的课程为：'.s($year).'学年'.s($term).'学期'.s($course_name).'课,年级为'
 		.s($stu_grade).'，专业为'.s($stu_major).'，最后更新日期为'.s($last_update).'：</p>';
 
 		echo '<table class="table-bordered">';
@@ -302,7 +307,8 @@ function addNewAt($pro_id){
 				echo '</td>';
 			
 				echo '<td>';
-				echo '<input type="text" name="no_sum'.$i.'" value="'.$row['no_sum'].'">';
+				echo '<input type="number" name="no_sum'.$i.'" value="'.$row['no_sum'].'"
+				min="'.$row['no_sum'].'" required>';
 				echo '</td>';
 
 
@@ -359,7 +365,13 @@ function make_a_select_for_at_meta($name,$selected_value = NULL){
 	echo '</select>';
 }
 
-function makeOption($value,$text,$selected_value = NULL){
+function makeOption($value,$text,$selected_value = NULL,$ignore_empty=0){
+
+		if ($ignore_empty==1) {
+			if (empty($text)) {
+				return ;
+			}
+		}
 
 		echo '<option value="'.$value.'"';
 		if ($selected_value == $value) {
@@ -498,6 +510,10 @@ function showMenuAccordUserRole(){
 		<a href="dev.php">'.lang('dev').'</a>
 		<a href="add.php">'.lang('add').'</a>
 		<a href="show_at.php">'.lang('show_at').'</a> 
+		<a href="manage_pro.php">'.lang('manage_pro').'</a>
+
+		<a href="manage_go.php">'.lang('manage_go').'</a> 
+
 		';
 	}
 	
@@ -509,10 +525,8 @@ function showAdminMenu(){
 	<a href="manage_stu.php">'.lang('manage_stu').'</a> 
 	<a href="manage_tea.php">'.lang('manage_teacher').'</a> 
 	<a href="manage_course.php">'.lang('manage_course').'</a>	
-	<a href="manage_pro.php">'.lang('manage_pro').'</a>
-	<a href="manage_go.php">'.lang('manage_go').'</a> 
+	<a href="set_course.php">'.lang('set_course').'</a> 
 
-	<a href="show_at.php">'.lang('show_at').'</a> 
 	';
 	
 }
@@ -576,17 +590,13 @@ if ($result->num_rows == 0) {
 			echo "<td>";
 
 			if ($table_name=='project') {
-				echo '<a href="add_main.php?'.$primary_key.'='.$row[$primary_key].'">'.lang('add_at').'</a>';
+				echoButtonIfAddedStudent($primary_key,$row[$primary_key]);		
 
-				echo '&nbsp;';
-				echo '<a href="show_at.php?'.$primary_key.'='.$row[$primary_key].'">'.lang('show_at').'</a>';
-
-				echo '&nbsp;';
 				echo '<a href="set_student.php?'.$primary_key.'='.$row[$primary_key].'">';
 				echoAddStudentOrSet($row[$primary_key]);
 				echo '</a>';
-
 				echo '&nbsp;';
+
 				echo '<a href="'.$php_self.'?op=del&'.$primary_key.'='.$row[$primary_key].'" onclick="';
 				echo "return confirm('您确定删除此课程? \\n这将清空所有与此课程相关的点名记录，而且无法撤销！');";
 				echo '">'.red(lang('del')).'</a>';
@@ -611,10 +621,10 @@ if ($result->num_rows == 0) {
 echo '</table>';
 
 if ($table_name == 'project') {
-	echo '<a href="'.php_self().'?op=add'.'"><button>'.lang('add_new_course').'</button></a>';
+	echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_course').'</a>';
 }
 else{
-	echo '<a href="'.php_self().'?op=add'.'"><button>add</button></a>';
+	echo '<a href="'.php_self().'?op=add'.'">add</a>';
 }
 
 
@@ -1270,11 +1280,11 @@ function inputNewPro($table_name,$user_role=NULL){
 			
 
 			echo '<td>';
-			makeSelect('stu_grade',"SELECT DISTINCT stu_grade from student ",'','不分年级');
+			makeSelect('stu_grade',"SELECT DISTINCT stu_grade from student ",'no_selected','不分年级',1);
 			echo '</td>';
 
 			echo '<td>';
-			makeSelect('stu_major',"SELECT DISTINCT stu_major from student ",'','不分专业');
+			makeSelect('stu_major',"SELECT DISTINCT stu_major from student ",'no_selected','不分专业',1);
 			echo '</td>';
 
 			echo '<td>';
@@ -1296,7 +1306,7 @@ function inputNewPro($table_name,$user_role=NULL){
 	echo "</table>";
 
 	
-
+	makeAnInput('last_update','从未更新',1,1);
 	echo '<input type="submit" value="insert">';
 	echo '&nbsp;';
 	echo '<a href="'.$php_self.'">cancel</a>';
@@ -1489,7 +1499,7 @@ function getLastInsertID(){
 
 
 
-function makeSelect($name,$sql,$selected_value=NULL,$empty_tip='not_set'){
+function makeSelect($name,$sql,$selected_value=NULL,$empty_tip='not_set',$ignore_empty=0){
 	global $db;
 	echo '<select name="'.$name.'" >';
 
@@ -1519,7 +1529,7 @@ function makeSelect($name,$sql,$selected_value=NULL,$empty_tip='not_set'){
 
 			
 
-			makeOption($first_key_value,$text,$selected_value);
+			makeOption($first_key_value,$text,$selected_value,$ignore_empty);
 		}
 	}
 
@@ -1723,17 +1733,19 @@ function showAtDetail(){
 function showAttendTable($pro_id){
 	global $db;
 
-	getProDetail($pro_id,$course_id,$year,$term,$stu_grade,$stu_major,$last_update);
-	$course_name=getCourseName($course_id);
-	echo '<p>'.s($year).'学年'.s($term).'学期'.s($course_name).'课的点名情况如下所示：</p>';
-	//echo '<p>(此课程年级为'.s($stu_grade).'，专业为'.s($stu_major).'，最后更新时间为'.s($last_update).')：</p>';
-
 	$sql="SELECT * from attend where pro_id= '$pro_id'";
 	$result = $db->query($sql);
 	if ($result->num_rows == 0) {
-		echo "<h1>no students in your course, please add students to your course first</h1>";
+		$add_student_link='<a href="set_student.php?pro_id='.$pro_id.'">'.lang('add_student').'</a>';
+		echo_red("您课程中没有学生, 请 $add_student_link");
+		die();
 	} else {
 
+		getProDetail($pro_id,$course_id,$year,$term,$stu_grade,$stu_major,$last_update);
+		$course_name=getCourseName($course_id);
+		echo '<p>'.s($year).'学年'.s($term).'学期'.s($course_name).'课的点名情况如下所示';
+		//echo '<p>(此课程年级为'.s($stu_grade).'，专业为'.s($stu_major).'，最后更新时间为'.s($last_update).')：</p>';
+		echo '(最后更新时间'.s($last_update).')：</p>';
 		echo '<table class="table-bordered">';
 		echo '<tr>';
 		echo '<th>';
@@ -1803,7 +1815,7 @@ function makeTableForAddStudent($pro_id){
 	$sql="SELECT * FROM student";
 	$result = $db->query($sql) or die($db->error);
 	if ($result->num_rows == 0) {
-		echo_red('no result!Please add students');
+		echo_red('no result! Please tell admin add students');
 		die();
 	} else {		
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
@@ -1825,9 +1837,9 @@ function checkAddedStu($pro_id,$stu_id){
 	$sql="SELECT stu_id FROM attend where pro_id= '$pro_id' and stu_id = '$stu_id' ";
 	$result = $db->query($sql) or die($db->error);
 	if ($result->num_rows == 0) {
-		echo '<td>'.'<button onclick="add(this.value)" value="'.$stu_id.'">add</button>'.'</td>';
+		echo '<td>'.'<button onclick="add(this.value)" value="'.$stu_id.'" class="btn-primary">添加</button>'.'</td>';
 	} else {		
-		echo '<td>'.'<button disabled>added</button>'.'</td>';
+		echo '<td>'.'<button disabled="disabled">已添加</button>'.'</td>';
 	}
 
 }
@@ -1840,7 +1852,7 @@ function makeTableForAddedStudent($pro_id){
 	$sql="SELECT stu_id FROM attend where pro_id= '$pro_id'";
 	$result = $db->query($sql) or die($db->error);
 	if ($result->num_rows == 0) {
-		echo_red('no result!please add students to here');
+		echo_red('Please add students from left table to here');
 		//die();
 	} else {		
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
@@ -1849,7 +1861,7 @@ function makeTableForAddedStudent($pro_id){
 			$stu_name=getStuName($stu_id);
 			echo '<td>'.$stu_id.'</td>';
 			echo '<td>'.$stu_name.'</td>';
-			echo '<td>'.'<button onclick="del(this.value)" value="'.$stu_id.'">del</button>'.'</td>';
+			echo '<td>'.'<button onclick="del(this.value)" value="'.$stu_id.'"  class="btn-danger" >删除</button>'.'</td>';
 			echo '</tr>'; 
 		}		
 	}
@@ -1885,6 +1897,35 @@ function echoAddStudentOrSet($pro_id){
 		echo lang('set_student');
 	}
 }
+
+
+function echoButtonIfAddedStudent($pro_id,$pro_id_value){
+	global $db;
+
+	$sql="SELECT stu_id FROM attend where pro_id= '$pro_id_value'";
+	//noise($sql);
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		echo '<a href="add_main.php?'.$pro_id.'='.$pro_id_value.'">'.lang('add_at').'</a>';
+		echo '&nbsp;';
+
+		echo '<a href="show_at.php?'.$pro_id.'='.$pro_id_value.'">'.lang('show_at').'</a>';
+		echo '&nbsp;';
+	} else {		
+		echo '<a href="add_main.php?'.$pro_id.'='.$pro_id_value.'">'.lang('add_at').'</a>';
+		echo '&nbsp;';
+
+		echo '<a href="show_at.php?'.$pro_id.'='.$pro_id_value.'">'.lang('show_at').'</a>';
+		echo '&nbsp;';
+	}
+}
+
+
+
+
+
+
+
 
 
 

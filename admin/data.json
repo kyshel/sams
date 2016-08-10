@@ -29,6 +29,7 @@
 		"stu_grade":"年级",
 		"stu_major":"专业",
 		"course_id":"课程代码-课程名",
+		"last_update":"点名更新时间",
 		"tea_id":"工号-教师名"
 	},
 	"go":
