@@ -17,6 +17,11 @@ require_once("header.php");
 
 
 
+//>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>160812,21:37:29
+
+//getTableDetail('student','stu_id');
+//getTableColumnName('student');
+getArrayFromEntry('student','stu_id','1023010115');
 
 
 
@@ -25,6 +30,7 @@ require_once("header.php");
 
 
 
+die();
 
 //echoSelectForAddedGo('a','SELECT distinct stu_grade,stu_major,course_id from go');
 

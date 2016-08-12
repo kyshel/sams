@@ -515,6 +515,64 @@ function getGoDetail($go_id,&$stu_grade,&$stu_major,&$course_id,&$go_time,&$add_
 	$add_time=$row['add_time'];
 }
 
+function getStuDetail($stu_id){
+	global $db;
+	$array=[];
+
+	$sql="SELECT *
+	from student
+	where stu_id = '$stu_id'";
+	$result = $db->query($sql);
+	$row = $result->fetch_array(MYSQLI_ASSOC);
+
+	$stu_grade=$row['stu_grade'];
+	$stu_major=$row['stu_major'];
+	$course_id=$row['course_id'];
+	$go_time=$row['go_time'];
+	$add_time=$row['add_time'];
+}
+
+function getArrayFromEntry($table_name,$primary_key_name,$primary_key_value){
+	global $db;
+	$array=[];
+
+	$sql="SELECT *
+	from $table_name
+	where $primary_key_name = '$primary_key_value'";
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echo_red('no result match your sql');
+	} else {
+		$row = $result->fetch_array(MYSQLI_ASSOC);
+		foreach ($row as $key => $value) {
+			$array[$key]=$value;
+		}	
+	}
+
+	dev_dump($array);
+	return $array;	
+}
+
+
+// never use !!!!!!!!!!!!!!!!!!!!!
+function getTableColumnName($table_name){
+	global $db;
+
+	$array=[];
+	$sql = "SHOW COLUMNS FROM $table_name";
+	noise($sql);
+	$result = $db->query($sql);
+	
+	while ( $row = $result->fetch_array(MYSQLI_ASSOC)) {
+		$array[]=$row['Field'];
+		noise($row['Field']);
+	}		
+
+	//var_dump($array);
+	return $array;
+
+}
+
 
 function showMenuAccordUserRole(){
 	$user_role=$_SESSION['user_role'];
@@ -558,34 +616,40 @@ function showTeacherMenu(){
 	';
 }
 
+function echoAddButtonForGrid($table_name,$only_bottom = 0){
+	$add_button_name=NULL;
+	$is_display_none='';
+	switch ($table_name) {
+		case 'student':
+		$add_button_name=lang('add_new_stu');
+		break;
 
+		case 'course':
+		$add_button_name=lang('add_new_course');
+		break;
+
+		case 'project':
+		$add_button_name=lang('add_new_pro');
+		$is_display_none=$only_bottom?'style="display:none;"':'';
+		break;
+
+		default:
+		$add_button_name=lang('add');
+		break;
+	}
+
+	echo '<a href="'.php_self().'?op=add'.'" '.$is_display_none.' >'.$add_button_name.'</a>';
+}
 
 
 function showGrid($table_name,$sql,$primary_key){
 global $db;
-
 $i = 0;
 $php_self=php_self();
 
 runOperateWithGet($table_name,$sql,$primary_key);
 
-// add button
-switch ($table_name) {
-	case 'student':
-		echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_stu').'</a>';
-		break;
-
-	case 'course':
-		echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_course').'</a>';
-		break;
-
-	default:
-		# code...
-		break;
-}
-	
-
-
+echoAddButtonForGrid($table_name,1);
 echo "<table class='table-bordered'>";
 echoTableHead($table_name,$sql,1);
 
@@ -664,25 +728,7 @@ if ($result->num_rows == 0) {
 }
 
 echo '</table>';
-
-// add bottom
-switch ($table_name) {
-	case 'student':
-		echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_stu').'</a>';
-		break;
-
-	case 'course':
-		echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_course').'</a>';
-		break;
-
-	case 'project':
-		echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_pro').'</a>';
-		break;
-
-	default:
-		echo '<a href="'.php_self().'?op=add'.'">'.lang('add').'</a>';
-		break;
-}
+echoAddButtonForGrid($table_name);
 
 
 }
@@ -691,9 +737,7 @@ switch ($table_name) {
 
 function runOperateWithGet($table_name,$sql,$primary_key){
 	
-	if(isset($_GET['op'])){
-		
-		
+	if(isset($_GET['op'])){		
 		//insert
 		if ($_GET['op'] == 'add') {
 			if($table_name == 'project'){
@@ -1088,12 +1132,6 @@ function insertEntry($table_name){
 
 	$i=0;
 	foreach($post_array as $x=>$x_value) {
-
-		// echo "$x";
-		// echo ".";
-		// echo "$x_value";
-		// echo "<br>";
-
 		if($i==0){
 			$col_name_str = $col_name_str.$x;
 			$val_name_str = $val_name_str."'".$x_value."'";
@@ -1114,12 +1152,49 @@ function insertEntry($table_name){
 
 	$result = $db->query($sql) or die($db->error);
 	if ($result == 1) {
-		echoGreen('Insert success!'); 
-		//echo '<a href="'.$php_self.'">cancel</a>';
+		echoGreen('添加成功!'); 
 	}
+
+	// auto add students to course
+	$pro_id=NULL;
+	if ($table_name=='project') {
+		$pro_id=getLastInsertID();
+		noise($pro_id);
+
+		//$stu_dep=isEqual()?:;
+		$stu_major=isEqual($_POST['stu_major'],'不分专业')?'':" and stu_major='".$_POST['stu_major']."'";
+		$stu_grade=isEqual($_POST['stu_grade'],'不分年级')?'':" and stu_grade='".$_POST['stu_grade']."'";
+
+		$sql2="SELECT stu_id FROM student WHERE 1".$stu_major.$stu_grade;
+		noise($sql2);
+		$stu_array=getSqlArray($sql2,'stu_id');
+		addStudentToCourse($pro_id,$stu_array);
+
+		echoTableForAddedStudent($pro_id);
+		//showGrid('project',"SELECT * FROM ",'pro_id');
+	}
+
+	
+
 	
 }
 
+function getSqlArray($sql,$key_name){
+	global $db;
+	$sql_array=[];
+
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		if (DEV_MODE == 1) {
+			echo_red("<h5>(dev)No result match your sql<h5>");
+		}		
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			$sql_array[]=$row[$key_name];
+		}
+	}
+	return $sql_array;	
+}
 
 function execDel($table_name,$primary_key,$primary_key_value){
 	global $db;
@@ -1316,7 +1391,7 @@ function inputNewPro($table_name,$user_role=NULL){
 	$php_self=php_self();
 	$json_array=getArrayFromJsonFile();
 
-	echo '<span>添加新课程</span>';
+	echo '<span>添加考勤课程：</span>';
 	echo '<form method="post" action="'.$php_self.'?op=insert">';	
 	echo "<table class='table-bordered'>";
 		echo "<tr>";
@@ -2015,6 +2090,37 @@ function makeFormForDelStudent($pro_id){
 }
 
 
+
+function echoTableForAddedStudent($pro_id){
+	global $db;
+
+
+	echo '<table class="table-bordered">';
+	$sql="SELECT * FROM attend where pro_id= '$pro_id' ";
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		echo_red('您课程中没有学生，请在左侧添加！');
+		//die();
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			echo '<tr>';
+			$stu_id=$row['stu_id'];
+			$stu_name=getStuName($stu_id);
+			$stu_array=getArrayFromEntry('student','stu_id',$stu_id);
+			echo '<td>'.$stu_id.'</td>';
+			echo '<td>'.$stu_name.'</td>';
+			echo '<td>'.$stu_array['stu_sex'].'</td>';
+			
+
+			//checkAddedStu($pro_id,$stu_id);
+
+			echo '</tr>'; 
+		}
+			
+	}
+	echo '</table>';
+}
+
 function isStudentAddedToCourse($pro_id,$stu_id){
 	global $db;
 	$sql="SELECT stu_id FROM attend where pro_id= '$pro_id' and stu_id = '$stu_id' ";
@@ -2355,6 +2461,25 @@ function lang($en){
 	
 	
 }
+
+
+
+function dev_dump($var){
+
+	if(DEV_MODE == 0){
+		return ;
+	}
+
+	echo '<br><span>  >>>>>>>> '.__FUNCTION__.'<br>';
+
+	var_dump($var);	
+
+	echo '<br> <<<<<<<<< '.__FUNCTION__.'</span>';
+
+	
+
+}
+
 
 
 
