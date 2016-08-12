@@ -355,7 +355,7 @@ function make_a_switch($name,$value,$label_text,$label_width,$on_text,$off_text,
 function make_a_select_for_at_meta($name,$selected_value = NULL){
 	echo '<select name="'.$name.'" required>';
 
-	$array=getArrayFromJsonFile('data.json');
+	$array=getArrayFromJsonFile();
 	$array_at_meta=$array['at_meta'];
 	foreach ($array_at_meta as $key => $value) {
 		//noise($key.$value);
@@ -399,11 +399,7 @@ function bug_get_go_id($pro_id,$go_time){
 	return $row['go_id'];
 }
 
-function check_go_unique($pro_id,$go_time){
-	global $db;
 
-	//echo "<h1>---wait to add check code---</h1>";
-}
 
 function checkGoUnique($stu_grade,$stu_major,$course_id,$go_time){
 	global $db;
@@ -417,6 +413,30 @@ function checkGoUnique($stu_grade,$stu_major,$course_id,$go_time){
 	if ($result->num_rows != 0) {
 		$warn=red('record exists!');
 		$warn.='<br><a href="add.php">back to rechoose</a>';
+		die($warn);
+		return 0;
+	} else {		
+		return 1;
+	}
+
+}
+
+function checkProUnique($year,$term,$course_id,$stu_grade,$stu_major){
+	global $db;
+	$sql="SELECT * FROM project WHERE
+	    year='$year'
+	and term='$term'
+	and course_id='$course_id' 
+	and stu_grade='$stu_grade' 
+	and stu_major='$stu_major' 
+	";
+
+	noise($sql);
+
+	$result=$db->query($sql) or die($db->error);
+	if ($result->num_rows != 0) {
+		$warn=red('您添加的课程已存在！');
+		$warn.='<br><a href="set_course.php?op=add">重新添加</a>';
 		die($warn);
 		return 0;
 	} else {		
@@ -539,6 +559,8 @@ function showTeacherMenu(){
 }
 
 
+
+
 function showGrid($table_name,$sql,$primary_key){
 global $db;
 
@@ -546,6 +568,22 @@ $i = 0;
 $php_self=php_self();
 
 runOperateWithGet($table_name,$sql,$primary_key);
+
+// add button
+switch ($table_name) {
+	case 'student':
+		echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_stu').'</a>';
+		break;
+
+	case 'course':
+		echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_course').'</a>';
+		break;
+
+	default:
+		# code...
+		break;
+}
+	
 
 
 echo "<table class='table-bordered'>";
@@ -601,6 +639,13 @@ if ($result->num_rows == 0) {
 				echo "return confirm('您确定删除此课程? \\n这将清空所有与此课程相关的点名记录，而且无法撤销！');";
 				echo '">'.red(lang('del')).'</a>';
 
+				
+				// echo '<button type="button" onclick="';
+				// echo "confirmDel('$primary_key','$row[$primary_key]')";
+				// echo '">'.red(lang('del')).'</button>';
+
+				
+
 
 			}else{			 
 			echo '<a href="'.$php_self.'?op=edit&'.$primary_key.'='.$row[$primary_key].'">edit</a>';
@@ -620,13 +665,24 @@ if ($result->num_rows == 0) {
 
 echo '</table>';
 
-if ($table_name == 'project') {
-	echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_course').'</a>';
-}
-else{
-	echo '<a href="'.php_self().'?op=add'.'">add</a>';
-}
+// add bottom
+switch ($table_name) {
+	case 'student':
+		echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_stu').'</a>';
+		break;
 
+	case 'course':
+		echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_course').'</a>';
+		break;
+
+	case 'project':
+		echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_pro').'</a>';
+		break;
+
+	default:
+		echo '<a href="'.php_self().'?op=add'.'">'.lang('add').'</a>';
+		break;
+}
 
 
 }
@@ -637,37 +693,9 @@ function runOperateWithGet($table_name,$sql,$primary_key){
 	
 	if(isset($_GET['op'])){
 		
-		if ($_GET['op'] == 'del') {
-			if(isset($_GET[$primary_key])){
-				$primary_key_value=$_GET[$primary_key];
-				execDel($table_name,$primary_key,$primary_key_value);
-				if($table_name == 'project'){
-					//del_at_with_go_id($primary_key_value);
-					delAttendByPro($primary_key_value);
-				}
-			}
-
-		}elseif ($_GET['op'] == 'edit') {
-			if($table_name == 'project'){
-				editProEntry($table_name,$_SESSION['user_role'],$primary_key,$_GET[$primary_key]);			
-			}else if ($table_name == 'go') {
-				editAt($_GET[$primary_key]);
-			}
-			else{
-				editEntry($table_name,$primary_key,$_GET[$primary_key]);
-			}
-		}elseif ($_GET['op'] == 'update') {
-
-			if($table_name == 'go'){
-				updateAt();			
-			}
-			else{
-				updateEntry($table_name,$primary_key,$_GET[$primary_key]);
-			}
-			
-		}
-
-		elseif ($_GET['op'] == 'add') {
+		
+		//insert
+		if ($_GET['op'] == 'add') {
 			if($table_name == 'project'){
 				inputNewPro($table_name,$_SESSION['user_role']);				
 			}else{
@@ -677,6 +705,39 @@ function runOperateWithGet($table_name,$sql,$primary_key){
 		}elseif ($_GET['op'] == 'insert') {
 			insertEntry($table_name);
 		}
+		//update
+		elseif ($_GET['op'] == 'edit') {
+			if($table_name == 'project'){
+				editProEntry($table_name,$_SESSION['user_role'],$primary_key,$_GET[$primary_key]);			
+			}else if ($table_name == 'go') {
+				editAt($_GET[$primary_key]);
+			}
+			else{
+				editEntry($table_name,$primary_key,$_GET[$primary_key]);
+			}
+		}elseif ($_GET['op'] == 'update') {
+			if($table_name == 'go'){
+				updateAt();			
+			}
+			else{
+				updateEntry($table_name,$primary_key,$_GET[$primary_key]);
+			}
+			
+		}
+		// del
+		elseif ($_GET['op'] == 'del') {
+			if(isset($_GET[$primary_key])){
+				$primary_key_value=$_GET[$primary_key];
+				execDel($table_name,$primary_key,$primary_key_value);
+				if($table_name == 'project'){
+					//del_at_with_go_id($primary_key_value);
+					delAttendByPro($primary_key_value);
+				}
+			}
+
+		}
+
+		
 
 
 	}
@@ -1011,6 +1072,18 @@ function insertEntry($table_name){
 	$val_name_str='';
 
 	dev_var_dump('post');
+
+	if ($table_name == 'project') {
+		$year=$_POST['year'];
+		$term=$_POST['term'];
+		$course_id=$_POST['course_id'];
+		$stu_grade=$_POST['stu_grade'];
+		$stu_major=$_POST['stu_major'];
+		checkProUnique($year,$term,$course_id,$stu_grade,$stu_major);
+	}
+	
+
+
 	$post_array = $_POST;
 
 	$i=0;
@@ -1069,7 +1142,7 @@ function echoTableHead($table_name,$sql,$need_op = 0){
 	$result = $db->query($sql) ;
 	if ($result->num_rows == 0) {
 		if (DEV_MODE == 1) {
-			echo_red("Table Head No Result");
+			echo_red("<h5>(dev)Table Head No Result!<h5>");
 		}		
 	} else {		
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
@@ -1241,16 +1314,19 @@ function inputNewPro2($table_name,$user_role=NULL){
 function inputNewPro($table_name,$user_role=NULL){
 	global $db;
 	$php_self=php_self();
+	$json_array=getArrayFromJsonFile();
 
-	echo '<form method="post" action="'.$php_self.'?op=insert">';
+	echo '<span>添加新课程</span>';
+	echo '<form method="post" action="'.$php_self.'?op=insert">';	
 	echo "<table class='table-bordered'>";
 		echo "<tr>";
-			echo '<th>course_id</th>';
-			echo '<th>year</th>';
-			echo '<th>term</th>';			
-			echo '<th>stu_grade</th>';
-			echo '<th>stu_major</th>';
-			echo '<th>tea_id</th>';
+			echo '<th>'.lang('course_id').'</th>';		
+			echo '<th>'.lang('year').'</th>';
+			echo '<th>'.lang('term').'</th>';	
+			echo '<th>'.lang('hour').'</th>';
+			echo '<th>'.lang('stu_grade').'</th>';
+			echo '<th>'.lang('stu_major').'</th>';
+			echo '<th>'.lang('tea_id').'</th>';
 		echo "</tr>";
 
 		echo "<tr>";
@@ -1258,13 +1334,14 @@ function inputNewPro($table_name,$user_role=NULL){
 			makeSelect('course_id',"SELECT DISTINCT course_id from course");
 			echo '</td>';
 
+			
+
 			echo '<td>';
 			echo '
 			<select name="year">
 				<option>2016-2017</option>
 			</select>
-			';
-			
+			';	
 			echo '</td>';
 
 			echo '<td>';
@@ -1274,17 +1351,25 @@ function inputNewPro($table_name,$user_role=NULL){
 				<option>2</option>
 			</select>
 			';
-
 			echo '</td>';
+
+			echo '<td>';
+			echo '<select name="hour">';			
+			foreach ($json_array['course_hour'] as $key => $value) {
+				echo '<option>'.$value.'</option>';
+			}
+			echo '</select>';
+			echo '</td>';
+
 
 			
 
 			echo '<td>';
-			makeSelect('stu_grade',"SELECT DISTINCT stu_grade from student ",'no_selected','不分年级',1);
+			makeSelect('stu_grade',"SELECT DISTINCT stu_grade from student ",'no_selected',1,'不分年级','不分年级');
 			echo '</td>';
 
 			echo '<td>';
-			makeSelect('stu_major',"SELECT DISTINCT stu_major from student ",'no_selected','不分专业',1);
+			makeSelect('stu_major',"SELECT DISTINCT stu_major from student ",'no_selected',1,'不分专业','不分专业');
 			echo '</td>';
 
 			echo '<td>';
@@ -1307,7 +1392,7 @@ function inputNewPro($table_name,$user_role=NULL){
 
 	
 	makeAnInput('last_update','从未更新',1,1);
-	echo '<input type="submit" value="insert">';
+	echo '<input type="submit" value="提交">';
 	echo '&nbsp;';
 	echo '<a href="'.$php_self.'">cancel</a>';
 
@@ -1499,9 +1584,13 @@ function getLastInsertID(){
 
 
 
-function makeSelect($name,$sql,$selected_value=NULL,$empty_tip='not_set',$ignore_empty=0){
+function makeSelect($name,$sql,$selected_value=NULL,$ignore_empty=0,$add_option_text='not_set',$add_option_value='not_set',$add_property='not_set'){
 	global $db;
-	echo '<select name="'.$name.'" >';
+	echo '<select name="'.$name.'" ';
+	if ($add_property !='not_set') {
+		echo $add_property;
+	}
+	echo '>';
 
 	//$sql="SELECT DISTINCT stu_grade from student";
 
@@ -1510,8 +1599,8 @@ function makeSelect($name,$sql,$selected_value=NULL,$empty_tip='not_set',$ignore
 		echo "<option>no result</option>";
     } else {
 
-    	if($empty_tip != 'not_set'){
-    		echo '<option value="'.$empty_tip.'" selected>'.$empty_tip.'</option>';
+    	if($add_option_text != 'not_set'){
+    		echo '<option value="'.$add_option_value.'" selected>'.$add_option_text.'</option>';
     	}
 
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
@@ -1806,6 +1895,137 @@ function paintResult($result){
 }
 
 
+function delStudentFromCourse($pro_id,$stu_array){
+	foreach ($stu_array as $key => $value) {			
+		if (isStudentAddedToCourse($pro_id,$value)) {
+			$stu_id = $value;
+			$sql_delete="DELETE FROM attend where pro_id = '$pro_id' and stu_id = '$stu_id'";
+			//noise($sql_delete);
+			delOne($sql_delete,1);				
+		}		
+	}
+}
+
+
+function addStudentToCourse($pro_id,$stu_array){
+	foreach ($stu_array as $key => $value) {			
+		if (isStudentAddedToCourse($pro_id,$value)) {				
+		}else{
+			$stu_id = $value;
+			$sql_insert="INSERT into attend(pro_id,stu_id,no_sum) values('$pro_id','$stu_id',0)";
+			//noise($sql_insert);
+			insertOne($sql_insert,1);
+		}			
+	}
+}
+
+function isEqual($var,$str){
+	if ($var == $str) {
+		return 1;
+	}
+	return 0;
+}
+
+function buildFilterStuSql($condition){
+	$dep=isset($condition['stu_dep'])?$condition['stu_dep']:'all';
+	$major=isset($condition['stu_major'])?$condition['stu_major']:'all';
+	$grade=isset($condition['stu_grade'])?$condition['stu_grade']:'all';
+	$id=isset($condition['stu_id'])?$condition['stu_id']:'';
+
+	$stu_dep_con=isEqual($dep,'all')?'':"stu_dep='".$dep."' and ";
+	$stu_major_con=isEqual($major,'all')?'':"stu_major='".$major."' and ";
+	$stu_grade_con=isEqual($grade,'all')?'':"stu_grade='".$grade."' and ";
+	$stu_id_con="stu_id LIKE '%".$id."%'";
+
+	$sql="SELECT * FROM student WHERE ".$stu_dep_con.$stu_major_con.$stu_grade_con.$stu_id_con;
+	noise($sql);
+
+	return $sql;
+}
+
+function makeFormForAddStudent($pro_id,$condition=NULL){
+	global $db;
+
+	
+	if ($condition==NULL) {
+		$sql="SELECT * FROM student";
+		echo '<span>所有学生：</span>';
+	}else{		
+		$sql=buildFilterStuSql($condition);
+		echo '<span>过滤结果：</span>';
+	}
+	echo '<form id="add_form">';
+	echo '<table class="table-bordered">';	
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		echo_red('结果为空，请重新设置过滤条件！');
+		die();
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			echo '<tr>';
+			$stu_id=$row['stu_id'];
+			$isDisable=isStudentAddedToCourse($pro_id,$stu_id)?'disabled checked':'class="add_check_box"';
+			echo '<td>'.'<input type="checkbox" name="stu_id[]" value="'.$stu_id.'" '.$isDisable.'>'.$stu_id.'</td>';
+			echo '<td>'.$row['stu_name'].'</td>';
+
+			//checkAddedStu($pro_id,$stu_id);
+
+			echo '</tr>'; 
+		}		
+	}
+	echo '</table>';
+	echo makeInput('pro_id',$pro_id,1,1);
+	echo '<input type="checkbox" id="add_check_all"/>全选';
+	echo '</form>';
+	
+	echo '<button onclick="add(this.value)" value="'.$pro_id.'" class="btn-primary">添加</button>';
+}
+
+function makeFormForDelStudent($pro_id){
+	global $db;
+
+	echo '<p>已添加到此课程的学生：</p>';
+	echo '<form id="del_form">';
+	echo '<table class="table-bordered">';
+	$sql="SELECT * FROM attend where pro_id= '$pro_id' ";
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		echo_red('您课程中没有学生，请在左侧添加！');
+		//die();
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			echo '<tr>';
+			$stu_id=$row['stu_id'];
+			$stu_name=getStuName($stu_id);
+			echo '<td>'.'<input type="checkbox" name="stu_id[]" value="'.$stu_id.'" class="del_check_box" >'.$stu_id.'</td>';
+			echo '<td>'.$stu_name.'</td>';
+
+			//checkAddedStu($pro_id,$stu_id);
+
+			echo '</tr>'; 
+		}
+		echo '</table>';
+		echo makeInput('pro_id',$pro_id,1,1);
+		echo '<input type="checkbox" id="del_check_all"/>全选';
+		echo '</form>';
+
+		echo '<button onclick="del()" value="" class="btn-primary">删除</button>';		
+	}
+	
+}
+
+
+function isStudentAddedToCourse($pro_id,$stu_id){
+	global $db;
+	$sql="SELECT stu_id FROM attend where pro_id= '$pro_id' and stu_id = '$stu_id' ";
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		return 0;
+	} else {		
+		return 1;
+	}
+}
+
 
 function makeTableForAddStudent($pro_id){
 	global $db;
@@ -1870,18 +2090,18 @@ function makeTableForAddedStudent($pro_id){
 
 
 
-function insertOne($sql){
+function insertOne($sql,$ignore_msg = 0){
 	global $db;
 	$result = $db->query($sql) or die($db->error);
-	if ($result == 1) {
+	if ($result == 1 && $ignore_msg == 0) {
 		echoGreen('添加成功!'); 
 	}
 }
 
-function delOne($sql){
+function delOne($sql,$ignore_msg = 0){
 	global $db;
 	$result = $db->query($sql) or die($db->error);
-	if ($result == 1) {
+	if ($result == 1 && $ignore_msg == 0) {
 		echoGreen('删除成功!'); 
 	}
 }
@@ -2030,9 +2250,9 @@ function makeHideItem($info){
 }
 
 
-function getArrayFromJsonFile($file_name){
+function getArrayFromJsonFile(){
 
-	$str = file_get_contents($file_name);
+	$str = file_get_contents('data.json');
 	$array=json_decode($str, true);
 	//noise($array);
 	//dev_var_dump($array);
@@ -2040,7 +2260,7 @@ function getArrayFromJsonFile($file_name){
 	if(is_array($array)){
 		return $array;
 	}else{
-		echo_red('can not read json file, please check file exists, and file format is correct');
+		echo_red('can not read json file, please check file exists, or file format is correct');
 		return ;
 	}
 	
@@ -2119,7 +2339,7 @@ function lang($en){
 		$text = getJsonData('lang',$en,NULL,1);
 		if ($text == 'not_set') {
 			if(DEV_MODE == 1){
-				return $en.red('this value not set');
+				return $en.red('<-this value not set');
 			}
 			return $en;	
 		}	
@@ -2135,5 +2355,7 @@ function lang($en){
 	
 	
 }
+
+
 
 

@@ -1,8 +1,14 @@
 <?php
 require_once("header.php");
 ?>
-<p>Welcome to sams!</p>
-<p>推荐使用Chrome或Firefox或Safari浏览器</p>
+<p>Welcome to sams!推荐使用Chrome或Firefox或Safari浏览器</p>
+
+<p>提示:如果首次使用，请先添加您教授的课程，再添加学生，才可以点名！<br></p>
+
+
+
+
+
 
 
 <?php

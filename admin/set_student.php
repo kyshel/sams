@@ -11,72 +11,119 @@ $course_name=getCourseName($course_id);
 echo '<br><span>您选择的课程为：'.s($year).'学年,'.s($term).'学期,'.s($course_name).'</span>';
 ?>
 
+<style type="text/css">
+	#right_div,#filter_div{
+		border-style: solid;
+		border-color: #eee;
+		width:400px;
+	}
+	/* td ceiling*/
+	td{
+		vertical-align:top;
+	}
+</style>
 
-<div style="clear: both;"></div>
-<div id="select">
-<?php makeTableForAddStudent($pro_id); ?>
-</div>
-<div id="added">
-<?php makeTableForAddedStudent($pro_id) ?>
-</div>
+
+<table>
+	<tr>
+		<td>
+			<div id="filter_div">
+
+				<form id="filter_form">
+					<span>请选择要添加到此课程的学生：</span><br>
+				
+					<span>条件过滤：</span>
+					<?php 
+					makeSelect('condition[stu_dep]','SELECT DISTINCT stu_dep from student ','no_selected',1,'不分学院','all','onchange="filter()"');
+					makeSelect('condition[stu_major]','SELECT DISTINCT stu_major from student ','no_selected',1,'不分专业','all','onchange="filter()"');
+					makeSelect('condition[stu_grade]','SELECT DISTINCT stu_grade from student ','no_selected',1,'不分年级','all','onchange="filter()"');
+					?>
+					<br><span>学号过滤：</span>
+					<input type="number" min='0' name="condition[stu_id]" onkeyup="filter()" placeholder="输入学号过滤">
+					<button type="button" id="filter_button" onclick="filter()" >过滤</button> 
+				</form>
+
+			
+			<div id="left_div"><?php makeFormForAddStudent($pro_id); ?></div>
+			</div>		
+		</td>
+		<td>
+			<div id="right_div"><?php makeFormForDelStudent($pro_id) ?></div>	
+		</td>
+	</tr>
+</table>
+
+
 
 
 
 
 <script type="text/javascript">
 
-function add(str){
+function filter(){
 	var pro_id = getParameterByName('pro_id');
-
-	var req="ajax.php?op=add&stu_id="+str;
-	req+="&pro_id="+pro_id;
-	req+="&sid="+Math.random();
-
+	var url = "ajax.php?action=filter_stu_for_add&pro_id="+pro_id+"&sid="+Math.random(); 
 	$.ajax({
-		url: req,
-		success: function(result){
-			$("#added").html(result);
-			$.ajax({
-				url: "ajax.php?op=add_refresh&pro_id="+pro_id+"&sid="+Math.random(),
-				success: function(result){
-					$("#select").html(result);
-				}
-			});
+		type: "POST",
+		url: url,
+		data: $("#filter_form").serialize(), 
+		success: function(data)
+		{
+			$("#left_div").html(data);
 		}
-	});
-
-	
-
+	}); 
 }
 
 
-
-function del(str){
-	var confirm_del=confirm('删除此学生将同时删除此学生的旷课记录！\n您确定要删除？');
-	if (confirm_del == false) {
-		return;
-	}
-	
+function add(){
 	var pro_id = getParameterByName('pro_id');
-
-	var req="ajax.php?op=del&stu_id="+str;
-	req+="&pro_id="+pro_id;
-	req+="&sid="+Math.random();
-
+	var url = "ajax.php?action=add_student_to_course&sid="+Math.random(); 
 	$.ajax({
-		url: req,
-		success: function(result){
-			$("#added").html(result);
+		type: "POST",
+		url: url,
+		data: $("#add_form").serialize(), 
+		success: function(data)
+		{
+			$("#right_div").html(data);
 			$.ajax({
-				url: "ajax.php?op=add_refresh&pro_id="+pro_id+"&sid="+Math.random(),
-				success: function(result){
-					$("#select").html(result);
+				url: "ajax.php?action=refresh_left_div&pro_id="+pro_id+"&sid="+Math.random(),
+				success: function(data){
+					$("#left_div").html(data);
+					$('#filter_button').click();
 				}
 			});
 		}
 	});
+}
 
 
+function del(){
+
+	var confirm_del=confirm('删除选中的学生将同时删除学生对应的旷课记录！\n您确定要删除？');
+	if (confirm_del == false) {
+		return;
+	}
+
+
+
+	var pro_id = getParameterByName('pro_id');
+	var url = "ajax.php?action=del_student_from_course"; 
+	$.ajax({
+		type: "POST",
+		url: url,
+		data: $("#del_form").serialize(), 
+		success: function(data)
+		{
+			$("#right_div").html(data);
+			$.ajax({
+				url: "ajax.php?action=refresh_left_div&pro_id="+pro_id+"&sid="+Math.random(),
+				success: function(data){
+					$("#left_div").html(data);
+					$('#filter_button').click();
+				}
+			});
+		}
+	});
 }
 
 
@@ -91,22 +138,25 @@ function getParameterByName(name, url) {
 	if (!results[2]) return '';
 	return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
+
+//after ajax
+$(document).ajaxSuccess(function(){
+	$("#add_check_all").change(function () {
+		$(".add_check_box").prop('checked', $(this).prop("checked"));
+	});
+	$("#del_check_all").change(function () {
+		$(".del_check_box").prop('checked', $(this).prop("checked"));
+	});
+	
+});
+
+//first load page
+$("#add_check_all").change(function () {
+    $(".add_check_box").prop('checked', $(this).prop("checked"));
+});
+$("#del_check_all").change(function () {
+    $(".del_check_box").prop('checked', $(this).prop("checked"));
+});
+
+
 </script>
-<style type="text/css">
-	#select{
-		border-style: solid;
-		border-color: #eee;
-		width:400px;
-		
-
-		float: left;
-	}
-	#added{
-		border-style: solid;
-		border-color: #eee;
-		width:400px;
-		
-
-		float: left;
-	}
-</style>
