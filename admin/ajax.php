@@ -71,7 +71,17 @@ switch ($action) {
 		//var_dump($_POST);
 		$condition_array=$_POST['condition'];
 		echo '<span>过滤结果：<span><br>';
-		showGrid('student',buildFilterStuSql($condition_array),'stu_id');
+		showGrid('student',buildFilterStuSql($condition_array),'stu_id',0,1);
+		echo '<a href="manage_stu.php?op=add">'.lang('add_new_stu').'</a>';
+		break;
+
+	// never use
+	case 'show_all_stu':
+		echo '<span>所有学生：<span><br>';
+		echo '<a href="manage_stu.php?op=add">'.lang('add_new_stu').'</a>';
+		// below func has parameter to receive, not recommend for single show
+		showGrid('student','SELECT * from student','stu_id',0,1);
+		echo '<a href="manage_stu.php?op=add">'.lang('add_new_stu').'</a>';
 		break;
 	
 	default:

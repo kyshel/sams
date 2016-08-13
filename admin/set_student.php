@@ -8,7 +8,7 @@ echo '<a href="set_course.php"><<返回</a>';
 //echo '<a href="add_main.php?pro_id='.$pro_id.'">点名</a>';
 getProDetail($pro_id,$course_id,$year,$term,$stu_grade,$stu_major,$last_update);
 $course_name=getCourseName($course_id);
-echo '<br><span>您选择的课程为：'.s($year).'学年,'.s($term).'学期,'.s($course_name).'</span>';
+echo '<br><span>您选择的课程为：'.s($year).'学年，'.s($term).'学期，'.s($course_name).'，年级为'.s($stu_grade).'，专业为'.s($stu_major).'</span>';
 ?>
 
 <style type="text/css">

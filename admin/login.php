@@ -26,7 +26,7 @@ if ($login->isUserLoggedIn() == false) {
 	$login->go();
 }
 
-dev_var_dump('post');
+dev_dump($_POST);
 
 ?>
 

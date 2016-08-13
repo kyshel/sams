@@ -195,73 +195,11 @@ function get_major_grade($pro_id,&$stu_grade,&$stu_major){
 }
 
 
-function generate_stu_list($pro_id){
-	global $db;
-	$stu_grade=NULL;
-	$stu_major=NULL;
-	$i=0;
-
-	get_major_grade($pro_id,$stu_grade,$stu_major);
-	$sql="SELECT stu_id,stu_name 
-	from student
-	where stu_grade = '$stu_grade'
-	and stu_major = '$stu_major' ";
-	$result = $db->query($sql);
-
-	if ($result->num_rows == 0) {
-		echo "<h1>no students in your course, 
-		check student table, name must match</h1>";
-	} else {
-
-		echo '<table class="table-bordered">';
-			echo '<tr>';
-				echo '<th>';
-				echo '学号';
-				echo '</th>';
-
-				echo '<th>';
-				echo '点名';
-				echo '</th>';
-
-				echo '<th>';
-				echo '备注';
-				echo '</th>';
-		echo '</tr>';
-
-		while($row = $result->fetch_array(MYSQLI_ASSOC)){
-			echo '<tr>';
-
-				echo '<td>';
-				echo $row['stu_id'];
-				echo '<input type="text" name="stu_num'.$i.'" value="'.$row['stu_id'].'" readonly style="display: none;">';
-				echo '</td>';
-
-				// echo '<td>';
-				// echo $row['stu_name'];
-				// echo '</td>';
-			
-				echo '<td>';
-				make_a_switch('check'.$i,$row['stu_id'],$row['stu_name'],'42px','✔','✘','success','danger');
-				echo '</td>';
-
-				echo '<td>';
-				make_a_select_for_at_meta('at_meta'.$i);
-				echo '</td>';
-
-			echo '</tr>';
-			$i++;
-		}
-		echo '</table>';
-	}
-
-	echo '<input name="stu_sum" value="'.$i.'" style="display:none;" >';
-
-}
 
 function addNewAt($pro_id){
 	global $db;
 	getProDetail($pro_id,$course_id,$year,$term,$stu_grade,$stu_major,$last_update);
-	$course_name=getCoursename($course_id);
+	$course_name=getCourseName($course_id);
 	$i=0;
 	
 	$sql="SELECT * from attend where pro_id= '$pro_id'";
@@ -269,7 +207,7 @@ function addNewAt($pro_id){
 
 	if ($result->num_rows == 0) {
 		$add_student_link='<a href="set_student.php?pro_id='.$pro_id.'">'.lang('add_student').'</a>';
-		echo_red('您课程中没有学生, 请'.$add_student_link.'后，再来点名');
+		echoRed('您课程中没有学生, 请'.$add_student_link.'后，再来点名');
 		
 
 		die();
@@ -401,28 +339,15 @@ function bug_get_go_id($pro_id,$go_time){
 
 
 
-function checkGoUnique($stu_grade,$stu_major,$course_id,$go_time){
+function checkProUnique($pro_array){
 	global $db;
-	$sql="SELECT * FROM go WHERE
-	stu_grade='$stu_grade' 
-	and stu_major='$stu_major' 
-	and course_id='$course_id' 
-	and go_time='$go_time' ";
 
-	$result=$db->query($sql) or die($db->error);
-	if ($result->num_rows != 0) {
-		$warn=red('record exists!');
-		$warn.='<br><a href="add.php">back to rechoose</a>';
-		die($warn);
-		return 0;
-	} else {		
-		return 1;
-	}
+	$year=$pro_array['year'];
+	$term=$pro_array['term'];
+	$course_id=$pro_array['course_id'];
+	$stu_grade=$pro_array['stu_grade'];
+	$stu_major=$pro_array['stu_major'];
 
-}
-
-function checkProUnique($year,$term,$course_id,$stu_grade,$stu_major){
-	global $db;
 	$sql="SELECT * FROM project WHERE
 	    year='$year'
 	and term='$term'
@@ -499,21 +424,7 @@ function getProDetail($pro_id,&$course_id,&$year,&$term,&$stu_grade,&$stu_major,
 
 }
 
-function getGoDetail($go_id,&$stu_grade,&$stu_major,&$course_id,&$go_time,&$add_time){
-	global $db;
 
-	$sql="SELECT *
-	from go
-	where go_id = '$go_id'";
-	$result = $db->query($sql);
-	$row = $result->fetch_array(MYSQLI_ASSOC);
-
-	$stu_grade=$row['stu_grade'];
-	$stu_major=$row['stu_major'];
-	$course_id=$row['course_id'];
-	$go_time=$row['go_time'];
-	$add_time=$row['add_time'];
-}
 
 function getStuDetail($stu_id){
 	global $db;
@@ -541,7 +452,7 @@ function getArrayFromEntry($table_name,$primary_key_name,$primary_key_value){
 	where $primary_key_name = '$primary_key_value'";
 	$result = $db->query($sql);
 	if ($result->num_rows == 0) {
-		echo_red('no result match your sql');
+		echoRed('no result match your sql');
 	} else {
 		$row = $result->fetch_array(MYSQLI_ASSOC);
 		foreach ($row as $key => $value) {
@@ -616,64 +527,64 @@ function showTeacherMenu(){
 	';
 }
 
-function echoAddButtonForGrid($table_name,$only_bottom = 0){
-	$add_button_name=NULL;
-	$is_display_none='';
+// positon , 0 means up , 1 means down
+function echoButtonOutGrid($table_name,$no_echo,$no_echo_for_special_table = 0){
+	if ($no_echo == 1) {
+		return ;
+	}
+	$button_name=NULL;
 	switch ($table_name) {
 		case 'student':
-		$add_button_name=lang('add_new_stu');
+		$button_name=lang('add_new_stu');
+		echo '<a href="'.php_self().'?op=add'.'" '.$is_display_none.' >'.$button_name.'</a>';
 		break;
 
 		case 'course':
-		$add_button_name=lang('add_new_course');
+		$button_name=lang('add_new_course');
+		echo '<a href="'.php_self().'?op=add'.'" '.$is_display_none.' >'.$button_name.'</a>';
 		break;
 
 		case 'project':
-		$add_button_name=lang('add_new_pro');
-		$is_display_none=$only_bottom?'style="display:none;"':'';
+		if ($no_echo_for_special_table == 0) {
+			$button_name=lang('add_new_pro');
+			echo '<a href="'.php_self().'?op=add'.'">'.$button_name.'</a>';
+			echo '<br><br>';
+			echo '<a href="'.php_self().'?op=show_saved_pro'.'">'.lang('show_saved_pro').'</a>';
+		}
+		
 		break;
 
 		default:
-		$add_button_name=lang('add');
+		$button_name=lang('add');
+		echo '<a href="'.php_self().'?op=add'.'" '.$is_display_none.' >'.$button_name.'</a>';
 		break;
 	}
 
-	echo '<a href="'.php_self().'?op=add'.'" '.$is_display_none.' >'.$add_button_name.'</a>';
+	
 }
 
 
-function showGrid($table_name,$sql,$primary_key){
+function showGrid($table_name,$sql,$primary_key,$no_op=0,$no_out_button=0){
 global $db;
-$i = 0;
 $php_self=php_self();
 
 runOperateWithGet($table_name,$sql,$primary_key);
 
-echoAddButtonForGrid($table_name,1);
+
+echoButtonOutGrid($table_name,$no_out_button,1);
 echo "<table class='table-bordered'>";
 echoTableHead($table_name,$sql,1);
 
 $result = $db->query($sql);
 if ($result->num_rows == 0) {
 	if ($table_name == 'project') {
-		echo_red('未设置课程，请添加！');
+		echoRed('未设置课程，请添加！');
 	}else{
 		echo "<h1>No Result</h1>";
 	}	
 } else {		
 	while($row = $result->fetch_array(MYSQLI_ASSOC)){
-		if($i == 0){
-			// echo "<tr>";
-			// foreach($row as $x=>$x_value) {
-			// 	echo "<th>";
-			// 	echo $x;
-			// 	echo "</th>";
-			// }
-			// 	echo "<th>";
-			// 	echo "op";
-			// 	echo "</th>";
-			// echo "</tr>";			
-		}
+
 		echo "<tr>";
 		foreach($row as $x=>$x_value) {
 			if( ($x == 'course_id') && ($php_self=='set_course.php'||$php_self=='manage_pro.php'||$php_self=='manage_go.php') ){
@@ -699,17 +610,14 @@ if ($result->num_rows == 0) {
 				echo '</a>';
 				echo '&nbsp;';
 
+				echo '<a href="'.$php_self.'?op=save_pro&'.$primary_key.'='.$row[$primary_key].'" onclick="';
+				echo "return confirm('您确定结束此课程? \\n这将保存此课程的考勤记录，并且将此课程从考勤列表中删除！');";
+				echo '">'.lang('save_pro').'</a>';
+				echo '&nbsp;';
+
 				echo '<a href="'.$php_self.'?op=del&'.$primary_key.'='.$row[$primary_key].'" onclick="';
 				echo "return confirm('您确定删除此课程? \\n这将清空所有与此课程相关的点名记录，而且无法撤销！');";
 				echo '">'.red(lang('del')).'</a>';
-
-				
-				// echo '<button type="button" onclick="';
-				// echo "confirmDel('$primary_key','$row[$primary_key]')";
-				// echo '">'.red(lang('del')).'</button>';
-
-				
-
 
 			}else{			 
 			echo '<a href="'.$php_self.'?op=edit&'.$primary_key.'='.$row[$primary_key].'">edit</a>';
@@ -723,69 +631,145 @@ if ($result->num_rows == 0) {
 
 			echo "</td>" ;
 		echo "</tr>";
-		$i=1;
 	}
 }
 
 echo '</table>';
-echoAddButtonForGrid($table_name);
+echoButtonOutGrid($table_name,$no_out_button);
 
 
 }
 
 
 
-function runOperateWithGet($table_name,$sql,$primary_key){
-	
-	if(isset($_GET['op'])){		
-		//insert
-		if ($_GET['op'] == 'add') {
+function runOperateWithGet($table_name,$sql,$primary_key){	
+if (isset($_GET['op'])) {
+	switch ($_GET['op']) {
+		// add & insert
+		case 'add':
 			if($table_name == 'project'){
 				inputNewPro($table_name,$_SESSION['user_role']);				
 			}else{
-				addNewEntry($table_name);
+				inputNewEntry($table_name);
 			}
-			
-		}elseif ($_GET['op'] == 'insert') {
+			break;
+
+		case 'insert':
 			insertEntry($table_name);
-		}
-		//update
-		elseif ($_GET['op'] == 'edit') {
+			break;
+
+		// edit & update
+		case 'edit':
 			if($table_name == 'project'){
-				editProEntry($table_name,$_SESSION['user_role'],$primary_key,$_GET[$primary_key]);			
+				editPro($table_name,$_SESSION['user_role'],$primary_key,$_GET[$primary_key]);			
 			}else if ($table_name == 'go') {
 				editAt($_GET[$primary_key]);
 			}
 			else{
 				editEntry($table_name,$primary_key,$_GET[$primary_key]);
 			}
-		}elseif ($_GET['op'] == 'update') {
+			break;
+
+		case 'update':
 			if($table_name == 'go'){
-				updateAt();			
+				//updateAt();			
 			}
 			else{
 				updateEntry($table_name,$primary_key,$_GET[$primary_key]);
 			}
-			
-		}
+			break;
+		
 		// del
-		elseif ($_GET['op'] == 'del') {
+		case 'del':
 			if(isset($_GET[$primary_key])){
 				$primary_key_value=$_GET[$primary_key];
-				execDel($table_name,$primary_key,$primary_key_value);
+				delEntry($table_name,$primary_key,$primary_key_value);
 				if($table_name == 'project'){
 					//del_at_with_go_id($primary_key_value);
 					delAttendByPro($primary_key_value);
 				}
 			}
+			break;
 
-		}
+		case 'save_pro':
+			savePro($_GET[$primary_key]);
+			break;
 
+		case 'show_saved_pro':
 		
-
-
+			break;
+		
+		default:
+			echo 'wrong op string';
+			break;
 	}
 }
+}
+
+function savePro($pro_id){
+	global $db;
+	$i=0;
+	$array_pro=getArrayFromEntry('project','pro_id',$pro_id);
+	$year=$array_pro['year'];
+	$term=$array_pro['term'];
+	$course_id=$array_pro['course_id'];
+	$course_name=getCourseName($course_id);
+	$stu_grade=$array_pro['stu_grade'];
+	$stu_major=$array_pro['stu_major'];
+	$tea_id=$array_pro['tea_id'];
+	$tea_name=getTeacherName($tea_id);
+	$hour=$array_pro['hour'];
+	$save_time=getNowTime();
+
+	$sql_insert_s_pro="INSERT INTO s_project(year,term,course_id,course_name,stu_grade,stu_major,tea_id,tea_name,hour,save_time) VALUES ('".$year."','".$term."','".$course_id."','".$course_name."','".$stu_grade."','".$stu_major."','".$tea_id."','".$tea_name."','".$hour."','".$save_time."')";
+	//insertOne($sql_insert_s_pro,0);
+	// way 1
+	//$s_pro_id=getLastInsertID();
+
+	//noise($s_pro_id);
+
+	
+	$sql_select_stu="SELECT * FROM attend where pro_id='".$pro_id."'";
+	$array_attend=getArrayBySql($sql_select_stu);
+	//dev_dump($array_attend);
+
+	foreach ($array_attend as $key[] => $array_stu) {
+		noise($key[$i].'->'.$array_stu);
+		$stu_id=$array_stu['stu_id'];
+		$no_sum=$array_stu['no_sum'];
+		$sql_insert_s_attend="INSERT INTO s_attend(s_pro_id,stu_id,no_sum) VALUES ('".$pro_id."','".$stu_id."','".$no_sum."')";
+		//noise($sql_insert_s_attend);
+		insertOne($sql_insert_s_attend);
+
+		//dev_dump($array_stu);
+		$i++;
+	}
+
+
+
+
+
+	//getLastInsertID();
+
+
+	die();
+
+
+	$sql="SELECT * from $table_name where $primary_key = '$primary_key_value' ";
+
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		echo "<h1>No Result</h1>";
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+
+		}
+	}
+
+}
+
+
+
 
 function editEntry($table_name,$primary_key,$primary_key_value){
 	global $db;
@@ -833,48 +817,7 @@ function editEntry($table_name,$primary_key,$primary_key_value){
 
 
 
-function editGoEntry($table_name,$primary_key,$primary_key_value){
-	global $db;
 
-	$sql="SELECT * from $table_name where $primary_key = '$primary_key_value' ";
-	$php_self=php_self();
-
-	noise($primary_key.'='.$primary_key_value);
-
-	echo '<form method="post" action="'.$php_self.'?op=update&'.$primary_key.'='.$primary_key_value.'"">';
-	echo "<table class='table-bordered'>";
-	echoTableHead($table_name,$sql);
-
-	$result = $db->query($sql);
-	if ($result->num_rows == 0) {
-		echo "<h1>No Result</h1>";
-	} else {		
-		while($row = $result->fetch_array(MYSQLI_ASSOC)){
-			
-			echo "<tr>";
-			foreach($row as $x=>$x_value) {
-				echo "<td>";
-				makeAnInput($x,$x_value);
-				echo "</td>" ;
-			}
-
-			echo "</tr>";
-
-			// just one line !
-			break;
-		}
-	}
-
-	echo "</table>";
-
-	echo '<input type="submit" value="update">';
-	echo '&nbsp;';
-	echo '<a href="'.$php_self.'">cancel</a>';
-
-	echo "</form>";
-
-	die();
-}
 
 
 function editAt($go_id = '28'){
@@ -905,7 +848,7 @@ function editAt($go_id = '28'){
 	$result = $db->query($sql);
 
 	if ($result->num_rows == 0) {
-		echo_red('no result');
+		echoRed('no result');
 	} else {
 
 		echo '<table class="table-bordered">';
@@ -960,64 +903,7 @@ function editAt($go_id = '28'){
 	//echo '';
 
 	die();
-	
-
 }
-
-
-
-
-function updateAt(){
-	global $db;
-	dev_var_dump('post');
-
-	if(isset($_POST['update_at_submit'])){
-		$go_id=$_POST['go_id'];
-		$stu_sum=$_POST["stu_sum"];
-		noise('$go_id is:'.$go_id);
-	}
-
-
-	for($j=0;$j<$stu_sum;$j++){
-		// make string that match the var name
-		$stu_num_j="stu_num".$j;
-		$check_j="check".$j;
-		$at_meta_j="at_meta".$j;
-
-		$stu_id=$_POST[$stu_num_j];
-		if (isset($_POST[$check_j])) {
-			$is_online=1;		
-		}else{
-			$is_online=0;
-		}
-		$at_meta=$_POST[$at_meta_j];
-
-		//echo $stu_id."-".$is_online.'<br>';
-
-		// $sql="INSERT attend(go_id, stu_id, at_yes, at_meta) VALUES
-		// ('$go_id','$stu_id','$is_online','$at_meta')";
-
-		$sql="UPDATE attend
-		SET 
-		at_yes='$is_online',
-		at_meta= '$at_meta'
-		WHERE go_id = '$go_id' and stu_id = '$stu_id' ";
-
-		$result=$db->query($sql) or die($db->error);	
-	}
-
-	if ($result == 1) {
-		echoGreen('update success');
-	}
-
-}
-
-function updateGo(){
-	global $db;
-
-	
-}
-
 
 
 
@@ -1029,7 +915,7 @@ function updateEntry($table_name,$primary_key,$primary_key_value){
 	$post_array = $_POST;
 	$i=0;
 
-	dev_var_dump('post');
+	dev_dump($_POST);
 
 	foreach($post_array as $x=>$x_value) {
 
@@ -1056,16 +942,15 @@ function updateEntry($table_name,$primary_key,$primary_key_value){
 	noise($sql);
 
 
-
 	$result = $db->query($sql) or die($db->error);
 	if ($result == 1) {
 		echoGreen('Update success!');
 		//echo "<h5>update success!</h5>";
 	}
-
 }
 
-function addNewEntry($table_name){
+
+function inputNewEntry($table_name){
 	global $db;
 	$sql="SELECT * from $table_name";
 	$php_self=php_self();
@@ -1115,18 +1000,12 @@ function insertEntry($table_name){
 	$col_name_str='';
 	$val_name_str='';
 
-	dev_var_dump('post');
+	dev_dump($_POST);
 
-	if ($table_name == 'project') {
-		$year=$_POST['year'];
-		$term=$_POST['term'];
-		$course_id=$_POST['course_id'];
-		$stu_grade=$_POST['stu_grade'];
-		$stu_major=$_POST['stu_major'];
-		checkProUnique($year,$term,$course_id,$stu_grade,$stu_major);
+	if ($table_name == 'project') {		
+		checkProUnique($_POST);
 	}
 	
-
 
 	$post_array = $_POST;
 
@@ -1148,55 +1027,57 @@ function insertEntry($table_name){
 	$sql='INSERT INTO '.$table_name.'('.$col_name_str.')VALUES
 	('.$val_name_str.')';
 
-	noise($sql);
+	//noise($sql);
 
 	$result = $db->query($sql) or die($db->error);
 	if ($result == 1) {
 		echoGreen('添加成功!'); 
 	}
 
-	// auto add students to course
+	// auto add students to course , if major&grade has set
 	$pro_id=NULL;
 	if ($table_name=='project') {
 		$pro_id=getLastInsertID();
-		noise($pro_id);
-
-		//$stu_dep=isEqual()?:;
-		$stu_major=isEqual($_POST['stu_major'],'不分专业')?'':" and stu_major='".$_POST['stu_major']."'";
-		$stu_grade=isEqual($_POST['stu_grade'],'不分年级')?'':" and stu_grade='".$_POST['stu_grade']."'";
-
-		$sql2="SELECT stu_id FROM student WHERE 1".$stu_major.$stu_grade;
-		noise($sql2);
-		$stu_array=getSqlArray($sql2,'stu_id');
-		addStudentToCourse($pro_id,$stu_array);
-
-		echoTableForAddedStudent($pro_id);
-		//showGrid('project',"SELECT * FROM ",'pro_id');
-	}
-
-	
-
-	
+		//noise($pro_id);
+		if ($_POST['stu_major']!='不分专业' && $_POST['stu_grade'] != '不分年级') {
+			$sql2="SELECT stu_id FROM student WHERE 1".$stu_major.$stu_grade;
+			//noise($sql2);
+			$stu_array=getArrayBySql($sql2,'stu_id');
+			addStudentToCourse($pro_id,$stu_array);
+			//showStudentInCourse($pro_id);
+		}		
+	}	
 }
 
-function getSqlArray($sql,$key_name){
+function getArrayBySql($sql,$key_name = NULL){
 	global $db;
-	$sql_array=[];
+	$i=0;
+	$array_sql=array();
 
 	$result = $db->query($sql) or die($db->error);
 	if ($result->num_rows == 0) {
 		if (DEV_MODE == 1) {
-			echo_red("<h5>(dev)No result match your sql<h5>");
+			echoRed("<h5>(dev)No result match your sql<h5>");
 		}		
-	} else {		
-		while($row = $result->fetch_array(MYSQLI_ASSOC)){
-			$sql_array[]=$row[$key_name];
-		}
+	} else {
+		if ($key_name != NULL) {
+			while($row = $result->fetch_array(MYSQLI_ASSOC)){
+				$array_sql[]=$row[$key_name];
+			}		
+		}else{
+			while($row = $result->fetch_array(MYSQLI_ASSOC)){
+				foreach ($row as $key => $value) {
+					$array_sql[$i][$key]=$value;
+				}	
+				$i++;			
+			}
+		}		
+		
 	}
-	return $sql_array;	
+	return $array_sql;	
 }
 
-function execDel($table_name,$primary_key,$primary_key_value){
+function delEntry($table_name,$primary_key,$primary_key_value){
 	global $db;
 
 	$sql="DELETE FROM $table_name
@@ -1217,7 +1098,7 @@ function echoTableHead($table_name,$sql,$need_op = 0){
 	$result = $db->query($sql) ;
 	if ($result->num_rows == 0) {
 		if (DEV_MODE == 1) {
-			echo_red("<h5>(dev)Table Head No Result!<h5>");
+			echoRed("<h5>(dev)Table Head No Result!<h5>");
 		}		
 	} else {		
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
@@ -1301,90 +1182,6 @@ function editProjectEntry($table_name,$primary_key,$primary_key_value){
 
 
 
-
-function inputNewPro2($table_name,$user_role=NULL){
-	global $db;
-	//$sql="SELECT stu_grade,stu_major,course_id from $table_name";
-	$php_self=php_self();
-	$tea_id=$_SESSION['tea_id'];
-
-	if ($user_role=='admin') {
-		$sql="SELECT stu_grade,stu_major,course_id,tea_id from $table_name";
-	}elseif($user_role=='teacher'){
-		$sql="SELECT stu_grade,stu_major,course_id from $table_name";
-	}
-
-	//$sql="SELECT stu_grade,stu_major,course_id from $table_name";
-
-	echo '<form method="post" action="'.$php_self.'?op=insert">';
-	echo "<table class='table-bordered'>";
-	echoTableHead($table_name,$sql);
-
-	$result = $db->query($sql);
-	if ($result->num_rows == 0) {
-		echo "<h1>No Result</h1>";
-	} else {		
-		while($row = $result->fetch_array(MYSQLI_ASSOC)){
-			
-			echo "<tr>";
-			foreach($row as $x=>$x_value) {
-				
-				$PK_name=getPrimaryKeyName($table_name);
-				//noise('$x is:'.$x);
-				//noise('$PK_name is:'.$PK_name);
-				if($x==$PK_name){
-					;
-				}else{
-					echo "<td>";
-					switch ($x) {
-						case 'stu_grade':
-							$query="SELECT DISTINCT stu_grade from student ";
-							break;
-
-						case 'stu_major':
-							$query="SELECT DISTINCT stu_major from student ";
-							break;
-
-						case 'course_id':
-							$query="SELECT DISTINCT course_id from course ";
-							break;
-
-						case 'tea_id':
-							$query="SELECT DISTINCT tea_id from teacher ";
-							break;
-
-						default:
-							
-							break;
-					}
-
-					//$query="SELECT DISTINCT $x from course ";
-					
-					makeSelect($x,$query);
-
-					echo "</td>" ;
-				}
-				
-			}
-
-			echo "</tr>";
-
-			// just one line !
-			break;
-		}
-	}
-
-	echo "</table>";
-
-	makeAnInput('tea_id',$tea_id,1,1);
-	echo '<input type="submit" value="insert">';
-	echo '&nbsp;';
-	echo '<a href="'.$php_self.'">cancel</a>';
-
-	echo "</form>";
-
-	die();
-}
 
 function inputNewPro($table_name,$user_role=NULL){
 	global $db;
@@ -1479,7 +1276,7 @@ function inputNewPro($table_name,$user_role=NULL){
 
 
 
-function editProEntry($table_name,$user_role=NULL,$primary_key,$primary_key_value){
+function editPro($table_name,$user_role=NULL,$primary_key,$primary_key_value){
 	global $db;
 	//$sql="SELECT stu_grade,stu_major,course_id from $table_name";
 	$php_self=php_self();
@@ -1591,18 +1388,6 @@ function makeAnInput($name,$value = '',$required = 1,$display_none = 0){
 
 
 
-
-
-function del_at_with_go_id($go_id){
-	global $db;
-
-	$sql="DELETE FROM attend
-	WHERE go_id = '$go_id' ";
-	$db->query($sql) or die($db->error);
-
-	echoGreen("<p>del at with go_id = $go_id success!</p>");
-}
-
 function delAttendByPro($pro_id){
 	global $db;
 
@@ -1620,7 +1405,7 @@ function getOneResultByOneQuery($sql){
 
 	if ($result->num_rows == 0) {
 		$warning=__FUNCTION__.':no result!';
-		echo_red($warning);
+		echoRed($warning);
 		return $warning;
 	} else {
 		$row = $result->fetch_array(MYSQLI_ASSOC);
@@ -1701,43 +1486,7 @@ function makeSelect($name,$sql,$selected_value=NULL,$ignore_empty=0,$add_option_
 
 }
 
-function echoSelectForAddedGo($name,$sql){
-	global $db;
-	echo '<select name="'.$name.'" >';
 
-	//$sql="SELECT DISTINCT stu_grade from student";
-
-	$result = $db->query($sql);
-	if ($result->num_rows == 0) {
-		echo "<option>no result</option>";
-    } else {
-		while($row = $result->fetch_array(MYSQLI_ASSOC)){
-			$stu_grade=$row['stu_grade'];
-			$stu_major=$row['stu_major'];
-			$course_id=$row['course_id'];
-			$course_name=getCourseName($course_id);
-
-			if (isset($row['tea_id'])) {
-				$tea_name=getTeacherName($row['tea_id']);
-				$text=$stu_grade.'-'.$stu_major.'-'.$course_name.'-'.$tea_name;
-			}else{
-				$text=$stu_grade.'-'.$stu_major.'-'.$course_name;
-			}
-			
-			
-			$go_id=getOneResultByOneQuery("SELECT go_id from go where stu_grade ='$stu_grade' and stu_major = '$stu_major' and course_id = '$course_id'");
-
-			makeOption($go_id,$text);
-
-
-
-
-
-		}
-	}
-	echo '</select>';
-
-}
 
 function makeInput($name,$value = '',$required = 1,$display_none = 0){
 	$str= '<input type="text" name="'.$name.'" ';
@@ -1790,110 +1539,6 @@ function echoSelectList($column,$table_name){
 }
 
 
-
-function showAtDetail(){
-	global $db;
-
-	$tea_id=NULL;
-	dev_var_dump('post');
-
-	$stu_grade=NULL;
-	$stu_major=NULL;
-	$course_id=NULL;
-	if (isset($_POST["pro_id"])) {
-		getProDetail($_POST["pro_id"],$stu_grade,$stu_major,$course_id);
-	}elseif (isset($_POST["go_id"])) {
-		$go_time=NULL;
-		$add_time=NULL;
-		getGoDetail($_POST["go_id"],$stu_grade,$stu_major,$course_id,$go_time,$add_time);
-	}elseif (isset($_GET["pro_id"])) {
-		getProDetail($_GET["pro_id"],$stu_grade,$stu_major,$course_id);
-	}
-	
-	$course_name=getCourseName($course_id);
-	echo s($stu_grade).'级，'.s($stu_major).'专业，'.s($course_name).'课的所有点名如下所示：';
-
-
-	$sql="SELECT go_id,go_time from go where 
-	stu_grade='$stu_grade' AND
-	stu_major='$stu_major' AND
-	course_id='$course_id' ORDER BY go_time ASC
-	";
-
-
-	echo '<table class="table-bordered">';
-	// >>>>>>>>>>>>>>  table head >>>>>>>>>>>>>>>>>>>>>>>>>>
-	$result = $db->query($sql) or die($db->error);
-	if ($result->num_rows == 0) {
-		echo_red('no result!');
-		die();
-	} else {
-		echo '<tr>';
-			echo '<th>'.'学号-姓名'.'</th>';		
-		while($row = $result->fetch_array(MYSQLI_ASSOC)){
-			$go_id=$row['go_id'];
-			$go_time=$row['go_time'];
-			echo '<th>'.$go_time.'</th>';
-		}
-		echo '</tr>'; 
-	}// go_id,go_time 
-	// <<<<<<<<<<<<<<  table head  <<<<<<<<<<<<<<<<<
-
-
-
-
-
- 
-	// >>>>>>>>>>    table body  >>>>>>>>>>>>>>
-	$sql2="SELECT * from student where stu_grade = '$stu_grade' AND stu_major = '$stu_major'";
-	$result2 = $db->query($sql2) or die($db->error);
-	if ($result2->num_rows == 0) {
-		echo_red('no result!');
-	} else {		
-		while($row2 = $result2->fetch_array(MYSQLI_ASSOC)){
-			echo '<tr>';
-
-			echo '<td>';
-			$stu_id = $row2['stu_id'];
-			$stu_name = $row2['stu_name'];
-			echo $stu_id.'-'.$stu_name;
-			echo '</td>';
-
-
-			$result = $db->query($sql) or die($db->error);
-			if ($result->num_rows == 0) {
-				echo_red('no result!');
-			} else {		
-				while($row = $result->fetch_array(MYSQLI_ASSOC)){
-					$go_id=$row['go_id'];
-					$go_time=$row['go_time'];
-
-
-					$sql3="SELECT at_yes from attend where stu_id = '$stu_id' and go_id = '$go_id' ";
-					$at_yes=getOneResultByOneQuery($sql3);
-					echo '<td>';
-					paintResult($at_yes);
-					// check fianla data is correct or not
-					makeHideItem('go_time is:'.$go_time.',stu_id is:'.$stu_id.'-'.$stu_name.',at_yes is:'.$at_yes);
-					echo '</td>';
-
-				}
-			}// go_id,go_time
-
-
-
-			echo '</tr>';
-		}
-	}//stu_id
-	// <<<<<<<<<<<<     table body       <<<<<<<<<<<<<<<<<
-	echo '</table>';
-
-	echo '<a href="show_at.php">继续查询</a>';
-}
-
-
-
-
 function showAttendTable($pro_id){
 	global $db;
 
@@ -1901,7 +1546,7 @@ function showAttendTable($pro_id){
 	$result = $db->query($sql);
 	if ($result->num_rows == 0) {
 		$add_student_link='<a href="set_student.php?pro_id='.$pro_id.'">'.lang('add_student').'</a>';
-		echo_red("您课程中没有学生, 请 $add_student_link");
+		echoRed("您课程中没有学生, 请 $add_student_link");
 		die();
 	} else {
 
@@ -1994,6 +1639,7 @@ function addStudentToCourse($pro_id,$stu_array){
 	}
 }
 
+// why i wrote this func ? 
 function isEqual($var,$str){
 	if ($var == $str) {
 		return 1;
@@ -2001,27 +1647,28 @@ function isEqual($var,$str){
 	return 0;
 }
 
+
 function buildFilterStuSql($condition){
 	$dep=isset($condition['stu_dep'])?$condition['stu_dep']:'all';
 	$major=isset($condition['stu_major'])?$condition['stu_major']:'all';
 	$grade=isset($condition['stu_grade'])?$condition['stu_grade']:'all';
 	$id=isset($condition['stu_id'])?$condition['stu_id']:'';
 
-	$stu_dep_con=isEqual($dep,'all')?'':"stu_dep='".$dep."' and ";
-	$stu_major_con=isEqual($major,'all')?'':"stu_major='".$major."' and ";
-	$stu_grade_con=isEqual($grade,'all')?'':"stu_grade='".$grade."' and ";
-	$stu_id_con="stu_id LIKE '%".$id."%'";
+	$stu_dep_con=isEqual($dep,'all')?'':" and stu_dep='".$dep."'";
+	$stu_major_con=isEqual($major,'all')?'':" and stu_major='".$major."'";
+	$stu_grade_con=isEqual($grade,'all')?'':" and stu_grade='".$grade."'";
+	$stu_id_con=" and stu_id LIKE '%".$id."%'";
 
-	$sql="SELECT * FROM student WHERE ".$stu_dep_con.$stu_major_con.$stu_grade_con.$stu_id_con;
+	$sql="SELECT * FROM student WHERE 1 ".$stu_dep_con.$stu_major_con.$stu_grade_con.$stu_id_con;
 	noise($sql);
 
 	return $sql;
 }
 
+
 function makeFormForAddStudent($pro_id,$condition=NULL){
 	global $db;
 
-	
 	if ($condition==NULL) {
 		$sql="SELECT * FROM student";
 		echo '<span>所有学生：</span>';
@@ -2033,18 +1680,15 @@ function makeFormForAddStudent($pro_id,$condition=NULL){
 	echo '<table class="table-bordered">';	
 	$result = $db->query($sql) or die($db->error);
 	if ($result->num_rows == 0) {
-		echo_red('结果为空，请重新设置过滤条件！');
+		echoRed('结果为空，请重新设置过滤条件！');
 		die();
 	} else {		
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
 			echo '<tr>';
 			$stu_id=$row['stu_id'];
 			$isDisable=isStudentAddedToCourse($pro_id,$stu_id)?'disabled checked':'class="add_check_box"';
-			echo '<td>'.'<input type="checkbox" name="stu_id[]" value="'.$stu_id.'" '.$isDisable.'>'.$stu_id.'</td>';
-			echo '<td>'.$row['stu_name'].'</td>';
-
-			//checkAddedStu($pro_id,$stu_id);
-
+				echo '<td>'.'<input type="checkbox" name="stu_id[]" value="'.$stu_id.'" '.$isDisable.'>'.$stu_id.'</td>';
+				echo '<td>'.$row['stu_name'].'</td>';
 			echo '</tr>'; 
 		}		
 	}
@@ -2053,7 +1697,7 @@ function makeFormForAddStudent($pro_id,$condition=NULL){
 	echo '<input type="checkbox" id="add_check_all"/>全选';
 	echo '</form>';
 	
-	echo '<button onclick="add(this.value)" value="'.$pro_id.'" class="btn-primary">添加</button>';
+	echo '<button onclick="add(this.value)" value="'.$pro_id.'" class="btn-success">添加</button>';
 }
 
 function makeFormForDelStudent($pro_id){
@@ -2065,18 +1709,15 @@ function makeFormForDelStudent($pro_id){
 	$sql="SELECT * FROM attend where pro_id= '$pro_id' ";
 	$result = $db->query($sql) or die($db->error);
 	if ($result->num_rows == 0) {
-		echo_red('您课程中没有学生，请在左侧添加！');
+		echoRed('您课程中没有学生，请在左侧添加！');
 		//die();
 	} else {		
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
 			echo '<tr>';
 			$stu_id=$row['stu_id'];
 			$stu_name=getStuName($stu_id);
-			echo '<td>'.'<input type="checkbox" name="stu_id[]" value="'.$stu_id.'" class="del_check_box" >'.$stu_id.'</td>';
-			echo '<td>'.$stu_name.'</td>';
-
-			//checkAddedStu($pro_id,$stu_id);
-
+				echo '<td>'.'<input type="checkbox" name="stu_id[]" value="'.$stu_id.'" class="del_check_box" >'.$stu_id.'</td>';
+				echo '<td>'.$stu_name.'</td>';
 			echo '</tr>'; 
 		}
 		echo '</table>';
@@ -2084,39 +1725,39 @@ function makeFormForDelStudent($pro_id){
 		echo '<input type="checkbox" id="del_check_all"/>全选';
 		echo '</form>';
 
-		echo '<button onclick="del()" value="" class="btn-primary">删除</button>';		
+		echo '<button onclick="del()" value="" class="btn-danger">删除</button>';		
 	}
 	
 }
 
 
 
-function echoTableForAddedStudent($pro_id){
+function showStudentInCourse($pro_id){
 	global $db;
-
 
 	echo '<table class="table-bordered">';
 	$sql="SELECT * FROM attend where pro_id= '$pro_id' ";
+	echoTableHead('student','SELECT * from student',0);
 	$result = $db->query($sql) or die($db->error);
 	if ($result->num_rows == 0) {
-		echo_red('您课程中没有学生，请在左侧添加！');
+		echoRed('您课程中没有学生，请在左侧添加！');
 		//die();
 	} else {		
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
 			echo '<tr>';
 			$stu_id=$row['stu_id'];
-			$stu_name=getStuName($stu_id);
 			$stu_array=getArrayFromEntry('student','stu_id',$stu_id);
-			echo '<td>'.$stu_id.'</td>';
-			echo '<td>'.$stu_name.'</td>';
-			echo '<td>'.$stu_array['stu_sex'].'</td>';
+
+				echo '<td>'.$stu_id.'</td>';
+				echo '<td>'.$stu_array['stu_name'].'</td>';
+				echo '<td>'.$stu_array['stu_sex'].'</td>';
+				echo '<td>'.$stu_array['stu_grade'].'</td>';
+				echo '<td>'.$stu_array['stu_dep'].'</td>';
+				echo '<td>'.$stu_array['stu_major'].'</td>';
+				echo '<td>'.$stu_array['stu_class'].'</td>';
 			
-
-			//checkAddedStu($pro_id,$stu_id);
-
 			echo '</tr>'; 
-		}
-			
+		}			
 	}
 	echo '</table>';
 }
@@ -2133,74 +1774,11 @@ function isStudentAddedToCourse($pro_id,$stu_id){
 }
 
 
-function makeTableForAddStudent($pro_id){
-	global $db;
-
-	echo '<p>请选择要添加到此课程的学生：</p>';
-	echo '<table class="table-bordered">';
-	$sql="SELECT * FROM student";
-	$result = $db->query($sql) or die($db->error);
-	if ($result->num_rows == 0) {
-		echo_red('no result! Please tell admin add students');
-		die();
-	} else {		
-		while($row = $result->fetch_array(MYSQLI_ASSOC)){
-			echo '<tr>';
-			$stu_id=$row['stu_id'];
-			echo '<td>'.$stu_id.'</td>';
-			echo '<td>'.$row['stu_name'].'</td>';
-			
-			checkAddedStu($pro_id,$stu_id);
-			
-			echo '</tr>'; 
-		}		
-	}
-	echo '</table>';
-}
-
-function checkAddedStu($pro_id,$stu_id){
-	global $db;
-	$sql="SELECT stu_id FROM attend where pro_id= '$pro_id' and stu_id = '$stu_id' ";
-	$result = $db->query($sql) or die($db->error);
-	if ($result->num_rows == 0) {
-		echo '<td>'.'<button onclick="add(this.value)" value="'.$stu_id.'" class="btn-primary">添加</button>'.'</td>';
-	} else {		
-		echo '<td>'.'<button disabled="disabled">已添加</button>'.'</td>';
-	}
-
-}
-
-function makeTableForAddedStudent($pro_id){
-	global $db;
-
-	echo '<p>已添加到此课程的学生：</p>';
-	echo '<table class="table-bordered">';
-	$sql="SELECT stu_id FROM attend where pro_id= '$pro_id'";
-	$result = $db->query($sql) or die($db->error);
-	if ($result->num_rows == 0) {
-		echo_red('Please add students from left table to here');
-		//die();
-	} else {		
-		while($row = $result->fetch_array(MYSQLI_ASSOC)){
-			echo '<tr>';
-			$stu_id=$row['stu_id'];
-			$stu_name=getStuName($stu_id);
-			echo '<td>'.$stu_id.'</td>';
-			echo '<td>'.$stu_name.'</td>';
-			echo '<td>'.'<button onclick="del(this.value)" value="'.$stu_id.'"  class="btn-danger" >删除</button>'.'</td>';
-			echo '</tr>'; 
-		}		
-	}
-	echo '</table>';
-}
-
-
-
 function insertOne($sql,$ignore_msg = 0){
 	global $db;
 	$result = $db->query($sql) or die($db->error);
 	if ($result == 1 && $ignore_msg == 0) {
-		echoGreen('添加成功!'); 
+		echoGreen('Insert success!'); 
 	}
 }
 
@@ -2208,7 +1786,7 @@ function delOne($sql,$ignore_msg = 0){
 	global $db;
 	$result = $db->query($sql) or die($db->error);
 	if ($result == 1 && $ignore_msg == 0) {
-		echoGreen('删除成功!'); 
+		echoGreen('Delete success!'); 
 	}
 }
 
@@ -2224,7 +1802,7 @@ function echoAddStudentOrSet($pro_id){
 	}
 }
 
-
+// no use
 function echoButtonIfAddedStudent($pro_id,$pro_id_value){
 	global $db;
 
@@ -2250,64 +1828,7 @@ function echoButtonIfAddedStudent($pro_id,$pro_id_value){
 
 
 
-
-
-
-
-
-
-
-//---------------  global dev code ,reserve in production environment-------------
-
-function dev_var_dump($var){
-	if(DEV_MODE == 0){
-		return ;
-	}
-	echo '<p> >>>>>>>>> '.__FUNCTION__.'<br>';
-
-	if($var == 'get'){
-		echo 'var_dump_get:';
-		var_dump($_GET);		
-	}
-	else if($var == 'post'){
-		echo 'var_dump_post:';
-		var_dump($_POST);
-	}else{
-		var_dump($var);
-	}
-
-	echo '<br> <<<<<<<<< '.__FUNCTION__.'</p>';
-
-}
-
-
-function noise($var){
-	if(DEV_MODE == 0){
-		return ;
-	}
-
-	echo '<p> >>>>>>>>> '.__FUNCTION__.'<br>';
-
-	echo 'see here -> <span style="color:red;">'.$var.'</span>   ';
-
-	echo '<br> <<<<<<<<< '.__FUNCTION__.'</p>';
-}
-
-
-function dev_delay(){
-	if(DEV_MODE == 0){
-		//1 hour
-		return 3600;
-	}
-
-	//10 days
-	return 3600*24*10;
-
-	// 3 seconds
-	//return 3;
-
-}
-
+// vital, but forget what means
 function dev_echo_col_name($table_name,$col_name){
 	if(LANG == 0){
 		echo $col_name;
@@ -2320,7 +1841,7 @@ function dev_echo_col_name($table_name,$col_name){
 			echo $col_name_array[$table_name][$col_name];
 		}else{
 			echo $col_name;
-			echo_red('check data.json file');
+			echoRed('check data.json file');
 		}
 
 	}
@@ -2341,7 +1862,7 @@ function s($str){
 
 
 
-function echo_red($str){
+function echoRed($str){
 	echo '<span style="color:red;">'.$str.'</span>';
 }
 
@@ -2350,7 +1871,7 @@ function echoGreen($str){
 }
 
 
-
+// which page use this?
 function makeHideItem($info){
 	echo '<p class="h">'.$info.'</p>';
 }
@@ -2361,18 +1882,18 @@ function getArrayFromJsonFile(){
 	$str = file_get_contents('data.json');
 	$array=json_decode($str, true);
 	//noise($array);
-	//dev_var_dump($array);
+	//dev_dump($array);
 
 	if(is_array($array)){
 		return $array;
 	}else{
-		echo_red('can not read json file, please check file exists, or file format is correct');
+		echoRed('can not read json file, please check file exists, or file format is correct');
 		return ;
 	}
 	
 }
 
-
+// which page use this?
 function getValueFromJsonFile($key1,$key2,$ignore_no_value = 0){
 
 
@@ -2380,7 +1901,7 @@ function getValueFromJsonFile($key1,$key2,$ignore_no_value = 0){
 	$array=json_decode($str, true);
 
 	if(!is_array($array)){
-		echo_red('can not read json file, please check file exists, or file format is correct');
+		echoRed('can not read json file, please check file exists, or file format is correct');
 		return ;
 	}
 
@@ -2390,7 +1911,7 @@ function getValueFromJsonFile($key1,$key2,$ignore_no_value = 0){
 	}
 	else{
 		if ($ignore_no_value == 0) {
-			echo_red('this value not set');
+			echoRed('this value not set');
 			return ;
 		}	
 		
@@ -2410,7 +1931,7 @@ function getJsonData($key1,$key2 = NULL,$key3 = NULL,$ignore_no_value = 0){
 	$array=json_decode($str, true);
 
 	if(!is_array($array)){
-		echo_red('can not read json file, please check file exists, or file format is correct');
+		echoRed('can not read json file, please check file exists, or file format is correct');
 		return ;
 	}
 
@@ -2427,12 +1948,10 @@ function getJsonData($key1,$key2 = NULL,$key3 = NULL,$ignore_no_value = 0){
 
 	else{
 		if ($ignore_no_value == 0) {
-			echo_red('this value not set');
+			echoRed('this value not set');
 		}			
 		return 'not_set';
 	}
-
-
 }
 
 
@@ -2452,7 +1971,7 @@ function lang($en){
 	 	return $text;
 	}
 
-	//************wait for add gm
+	//************ wait for add gm , maybe no gm ~
 	// else(){
 	// 	$array_index=LANG - 1;
 	// 	$text = getJsonData('lang',$en,LANG);
@@ -2464,19 +1983,91 @@ function lang($en){
 
 
 
-function dev_dump($var){
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//---------------  global dev code ,reserve in production environment-------------
+
+
+
+
+function noise($var){
 	if(DEV_MODE == 0){
 		return ;
 	}
+	echo '<p> >>>>>>>>> '.__FUNCTION__.'<br>';
+	echo '<span style="color:red;">'.$var.'</span>';
+	echo '<br> <<<<<<<<< '.__FUNCTION__.'</p>';
+}
 
-	echo '<br><span>  >>>>>>>> '.__FUNCTION__.'<br>';
 
-	var_dump($var);	
+function dev_delay(){
+	if(DEV_MODE == 0){
+		//1 hour
+		return 3600;
+	}
 
-	echo '<br> <<<<<<<<< '.__FUNCTION__.'</span>';
+	//10 days
+	return 3600*24*10;
 
-	
+	// 3 seconds
+	//return 3;
+
+}
+
+function dev_dump($var){
+	if(DEV_MODE == 0){
+		return ;
+	}
+	echo '<br><span>  >>>>>>>> '.__FUNCTION__.'';
+	echo '<pre>' . var_export($var, true) . '</pre>';
+	echo ' <<<<<<<<< '.__FUNCTION__.'</span>';
 
 }
 

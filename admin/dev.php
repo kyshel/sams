@@ -15,6 +15,49 @@ require_once("header.php");
 
 <?php
 
+//160813,16:56:42
+
+$a=NULL;
+$b='';
+$c=0;
+
+if (isset($a)) {
+  echo 'a is set<br>';
+}
+
+if (isset($b)) {
+  echo 'b is set<br>';
+}
+
+if (empty($a)) {
+  echo 'a is empty<br>';
+}
+if (empty($b)) {
+  echo 'b is empty<br>';
+}
+if (empty($c)) {
+  echo 'c is empty<br>';
+}
+
+if ($a != NULL ) {
+  echo 'a is not equal to NULL<br>';
+}
+if ($b != NULL ) {
+  echo 'b is not equal to NULL<br>';
+}
+
+
+die();
+
+
+
+
+
+
+
+
+
+
 
 
 //>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>160812,21:37:29
