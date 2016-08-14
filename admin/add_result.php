@@ -1,6 +1,6 @@
 <?php
 require_once("header.php");
-dev_var_dump('post');
+dev_dump(_POST);
 
 $go_id=NULL;
 $stu_id=NULL;

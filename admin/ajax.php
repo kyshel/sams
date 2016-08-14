@@ -34,12 +34,6 @@ if ( isset( $_GET['getAddedDate'] ) ) {
 // 	makeTableForAddStudent($pro_id);
 // }
 
-// receive showGrid() op 
-//  !!!!!! compromise way, only for stu manage  !!!!
-if (isset($_GET['op'])) {
-	runOperateWithGet('student','SELECT * from student','stu_id');
-}
-
 
 
 // set student
@@ -74,10 +68,9 @@ switch ($action) {
 		break;
 
 	case 'filter_stu_for_manage':
-		
-		//var_dump($_POST);
 		$condition_array=$_POST['condition'];
 		echo '<span>过滤结果：<span><br>';
+		// bad ways, edit link not calc auto
 		showGrid('student',buildFilterStuSql($condition_array),'stu_id',0,0,1);
 		echo '<a href="manage_stu.php?op=add">'.lang('add_new_stu').'</a>';
 		break;

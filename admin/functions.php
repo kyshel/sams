@@ -163,12 +163,17 @@ function php_self(){
     return $php_self;
 }
 
-function dynamic_css_js_lib(){
+function dynamicCssJsLib(){
 	$php_self=php_self();
+
 	if ($php_self == 'add.php' || $php_self == 'show_at.php' ){
+		// echo '
+		// <link rel="stylesheet" href="css/bootstrap-datepicker3.min.css">
+		// <script src="js/bootstrap-datepicker.min.js"></script>
+		// ';
+		
 		echo '
-		<link rel="stylesheet" href="css/bootstrap-datepicker3.min.css">
-		<script src="js/bootstrap-datepicker.min.js"></script>
+		<script language="javascript" type="text/javascript" src="js/tablesort.min.js"></script>
 		'; 
 	}
 	elseif($php_self == 'add_main.php' || $php_self == 'manage_go.php'){
@@ -177,6 +182,7 @@ function dynamic_css_js_lib(){
 		<script src="js/bootstrap-switch.min.js"></script>
 		'; 
 	}
+
 }
 
 
@@ -658,6 +664,12 @@ if ($result->num_rows == 0) {
 
 			}elseif ($table_name=='spro') {
 				echo '<a href="show_at.php?'.$primary_key.'='.$row[$primary_key].'">'.lang('show_at').'</a>';
+			}elseif ($table_name=='student') {
+				echo '<a href="manage_stu.php?op=edit&'.$primary_key.'='.$row[$primary_key].'">edit</a>';
+				echo '&nbsp;';
+				echo '<a href="manage_stu.php?op=del&'.$primary_key.'='.$row[$primary_key].'" onclick="';
+				echo "return confirm('Are you sure you want to delete this item?');";
+				echo '">del</a>';
 			}else{			 
 			echo '<a href="'.$php_self.'?op=edit&'.$primary_key.'='.$row[$primary_key].'">edit</a>';
 			echo '&nbsp;';
@@ -1596,20 +1608,21 @@ function showAttendTable($pro_id){
 		echo '<p>'.s($year).'学年'.s($term).'学期'.s($course_name).'课的点名情况如下所示';
 		//echo '<p>(此课程年级为'.s($stu_grade).'，专业为'.s($stu_major).'，最后更新时间为'.s($last_update).')：</p>';
 		echo '(最后更新时间'.s($last_update).')：</p>';
-		echo '<table class="table-bordered">';
-		echo '<tr>';
+		echo '<table class="table-bordered" id="tablesort">';
+
+		echo '<thead><tr>';
 		echo '<th>';
 		echo '学号';
 		echo '</th>';
 
-		echo '<th>';
+		echo '<th class="no-sort">';
 		echo '姓名';
 		echo '</th>';
 
 		echo '<th>';
 		echo '旷课次数';
 		echo '</th>';
-		echo '</tr>';
+		echo '</tr></thead>';
 
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
 			$stu_name=getStuName($row['stu_id']);

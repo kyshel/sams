@@ -15,7 +15,7 @@ function getParameterByName(name, url) {
 $( document ).ready(function() {
     var is_set_op=getParameterByName('op');
     //alert(typeof is_set_op);
-    if (typeof is_set_op != 'object' && is_set_op != 'update' && is_set_op != 'insert') {
+    if (typeof is_set_op != 'object' && is_set_op != 'update' && is_set_op != 'insert' && is_set_op != 'del') {
         $("#filter_form").hide();
     }
 

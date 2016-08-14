@@ -15,7 +15,7 @@ require_once("auth.php");
 
 <link rel="stylesheet" href="css/sams.css">
 
-<?php dynamic_css_js_lib(); ?>
+<?php dynamicCssJsLib(); ?>
 
 </head>
 
