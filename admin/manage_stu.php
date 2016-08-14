@@ -11,7 +11,7 @@ function getParameterByName(name, url) {
 	if (!results[2]) return '';
 	return decodeURIComponent(results[2].replace(/\+/g, " "));
 }
-
+// hide filter_form
 $( document ).ready(function() {
     var is_set_op=getParameterByName('op');
     //alert(typeof is_set_op);
@@ -43,6 +43,7 @@ echo '</div>';
 ?>
 
 <script type="text/javascript">
+// this part won't interpret when url has parameter, cause forwrad php code has die() 
 function filter(){
 	var url = "ajax.php?action=filter_stu_for_manage&sid="+Math.random(); 
 	$.ajax({

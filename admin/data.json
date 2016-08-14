@@ -34,6 +34,21 @@
 		"hour":"课时",
 		"tea_id":"工号-教师名"
 	},
+	"spro":
+	{
+		"spro_id":"编号",
+		"year":"学年",
+		"term":"学期",
+		"stu_grade":"年级",
+		"stu_major":"专业",
+		"course_id":"课程代码",
+		"course_name":"课程名",
+		"last_update":"点名更新时间",
+		"hour":"课时",
+		"tea_id":"工号",
+		"tea_name":"教师名",
+		"save_time":"提交时间"
+	},
 	"go":
 	{
 		"go_id":"记录号",

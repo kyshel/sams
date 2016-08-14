@@ -4,6 +4,7 @@ require_once("header.php");
 
 
 <?php
+$message='';
 $user_role=$_SESSION['user_role'];
 if ($user_role=='admin') {
 	$sql="SELECT pro_id,course_id,year,term,hour,stu_grade,stu_major,tea_id from project order by pro_id";
@@ -17,60 +18,4 @@ if ($user_role=='admin') {
 showGrid('project',$sql,'pro_id');
 echo '<br><br><span>'.$message.'</span>';
 ?>
-
-
-
-<script type="text/javascript">
-// function confirmDel($a,$b){
-// 	if (confirm('要保留本课程的考勤数据吗？')) {
-// 		if (confirm('删除本课程，但保留本课程考勤数据，\n您确定？')) {
-// 			delCourseButSaveAttend();
-// 		} else {
-// 			return ;
-// 		}
-// 	} else {
-// 		if (confirm('删除本课程，同时清空本课程考勤数据，\n您确定？')) {
-// 			delCourseAndDelAttend();
-// 		} else {
-// 			return;
-// 		}
-
-// 	}
-// }
-
-// function delCourseAndDelAttend(){
-
-// }
-
-// function delCourseButSaveAttend(){
-
-// }
-</script>
-	
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

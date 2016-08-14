@@ -1,7 +1,7 @@
 <?php
 require_once("header.php");
-dev_var_dump('post');
-dev_var_dump('get');
+// dev_var_dump('post');
+// dev_var_dump('get');
 
 if (isset($_POST["pro_id"])) {
 	$pro_id=$_POST["pro_id"];

@@ -14,6 +14,13 @@ require_once("header.php");
 
 
 <?php
+//160814,11:06:56
+
+isProHasStudent(5)?:die('');
+
+die();
+
+
 
 //160813,16:56:42
 
