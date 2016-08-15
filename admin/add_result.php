@@ -30,17 +30,21 @@ for($j=0;$j<$stu_sum;$j++){
 
 	$db->query($sql) or die($db->error);	
 }
+?>
 
-
-
-
+<a href="set_course.php">返回</a><br>
+<?php
 // show result
 echoGreen('提交成功！');
 showAttendTable($pro_id);
-
 ?>
+<a href="set_course.php">返回</a>
 
-<a href="set_course.php"><button>返回</button></a>
-
+<script type="text/javascript">	
+	$(document).ready(function() { 
+		new Tablesort(document.getElementById('tablesort'), {	
+		});
+	});
+</script>
 
 

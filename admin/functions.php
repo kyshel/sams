@@ -166,7 +166,7 @@ function php_self(){
 function dynamicCssJsLib(){
 	$php_self=php_self();
 
-	if ($php_self == 'add.php' || $php_self == 'show_at.php' ){
+	if ($php_self == 'add_result.php' || $php_self == 'show_at.php' ){
 		// echo '
 		// <link rel="stylesheet" href="css/bootstrap-datepicker3.min.css">
 		// <script src="js/bootstrap-datepicker.min.js"></script>
@@ -176,12 +176,12 @@ function dynamicCssJsLib(){
 		<script language="javascript" type="text/javascript" src="js/tablesort.min.js"></script>
 		'; 
 	}
-	elseif($php_self == 'add_main.php' || $php_self == 'manage_go.php'){
-		echo '
-		<link href="css/bootstrap-switch.min.css" rel="stylesheet">
-		<script src="js/bootstrap-switch.min.js"></script>
-		'; 
-	}
+	// elseif($php_self == 'add_main.php' || $php_self == 'manage_go.php'){
+	// 	echo '
+	// 	<link href="css/bootstrap-switch.min.css" rel="stylesheet">
+	// 	<script src="js/bootstrap-switch.min.js"></script>
+	// 	'; 
+	// }
 
 }
 
@@ -637,6 +637,12 @@ if ($result->num_rows == 0) {
 				$tea_name=getTeacherName($x_value);
 				echo "<td>" .$x_value."-".$tea_name."</td>" ;
 			}
+			else if ( ($x == 'stu_id') && ($php_self=='show_at.php') && $table_name =='attend') {
+				
+				
+			}
+
+			
 			else{
 				echo "<td>" .$x_value."</td>" ;
 			}
@@ -662,8 +668,18 @@ if ($result->num_rows == 0) {
 				echo "return confirm('您确定删除此课程? \\n这将清空所有与此课程相关的点名记录，而且无法撤销！');";
 				echo '">'.red(lang('del')).'</a>';
 
+
 			}elseif ($table_name=='spro') {
 				echo '<a href="show_at.php?'.$primary_key.'='.$row[$primary_key].'">'.lang('show_at').'</a>';
+
+				// $isAdmin=($_SESSION['user_role'] == 'admin')?1:0;
+				// if ($isAdmin) {
+				// 	echo '&nbsp;';
+				// 	echo '<a href="'.$php_self.'?op=del&'.$primary_key.'='.$row[$primary_key].'" onclick="';
+				// 	echo "return confirm('警告！这是已结课课程，您确定要删除？ \\n请务必在删除前做好考勤记录备份工作，删除后考勤记录无法恢复！');";
+				// 	echo '">'.red(lang('del')).'</a>';
+				// }
+
 			}elseif ($table_name=='student') {
 				echo '<a href="manage_stu.php?op=edit&'.$primary_key.'='.$row[$primary_key].'">edit</a>';
 				echo '&nbsp;';
@@ -750,8 +766,13 @@ if (isset($_GET['op'])) {
 			break;
 
 		case 'show_saved_pro':
-			echoDiv('已结课课程：');
-			showGrid('spro','SELECT * from spro','pro_id',1,0,1);
+			if ($_SESSION['user_role']=='admin') {			
+				$sql="SELECT * from spro";
+			}elseif ($_SESSION['user_role']=='teacher') {
+				$sql="SELECT * from spro where tea_id ='".$_SESSION['tea_id']."'";
+			}
+			echoDiv('已结课课程：');			
+			showGrid('spro',$sql,'spro_id',0,1,1);
 			echoLink(php_self(),'返回');
 			die();
 			break;
@@ -763,12 +784,15 @@ if (isset($_GET['op'])) {
 }
 }
 
+
 function savePro($pro_id){
 	global $db;
 	$i=0;
+	/* step 0 ,check isProHasStudent */
 	$no_stu_mes=red('所选课程中没有添加学生，无法结课！<br><a href="'.php_self().'">返回</a>');
 	isProHasStudent($pro_id)?:die($no_stu_mes);
 
+	/* step 1 ,insert spro&sat */
 	$array_pro=getArrayFromEntry('project','pro_id',$pro_id);
 	$year=$array_pro['year'];
 	$term=$array_pro['term'];
@@ -781,11 +805,13 @@ function savePro($pro_id){
 	$hour=$array_pro['hour'];
 	$save_time=getNowTime();
 
+	// insert spro
 	$sql_insert_spro="INSERT INTO spro(year,term,course_id,course_name,stu_grade,stu_major,tea_id,tea_name,hour,save_time) VALUES ('".$year."','".$term."','".$course_id."','".$course_name."','".$stu_grade."','".$stu_major."','".$tea_id."','".$tea_name."','".$hour."','".$save_time."')";
 	insertOne($sql_insert_spro,1);
-	// way 1
+
+	// insert sat
 	$spro_id=getLastInsertID();
-	noise($spro_id);
+	noise($spro_id,'spro_id');
 	
 	$sql_select_stu="SELECT * FROM attend where pro_id='".$pro_id."'";
 	$array_attend=getArrayBySql($sql_select_stu);
@@ -802,18 +828,17 @@ function savePro($pro_id){
 		$i++;
 	}
 
+
+	/* step 2 ,delete project&attend  */
 	//del pro
-	deleteOne("DELETE project WHERE pro_id ='".$pro_id."'");
+	deleteOne("DELETE FROM project WHERE pro_id ='".$pro_id."'");
 	//del stu in pro
-	deleteOne("DELETE attend WHERE pro_id ='".$pro_id."'");
+	deleteOne("DELETE FROM attend WHERE pro_id ='".$pro_id."'");
 
-	echoGreen('结课成功！');
-
+	/* step 3 ,confirm save ok */
+	echoGreen('结课成功！',1);
+	echoLink('set_course.php','返回');
 	die();
-
-
-
-
 }
 
 
@@ -1133,7 +1158,7 @@ function delEntry($table_name,$primary_key,$primary_key_value){
 	WHERE $primary_key = '$primary_key_value' ";
 	$result = $db->query($sql) or die($db->error);
 
-	echoGreen("<p>delete $table_name with $primary_key = $primary_key_value  success!</p>");
+	echoGreen("Delete $table_name with $primary_key = $primary_key_value  success!");
 	
 }
 
@@ -1605,9 +1630,80 @@ function showAttendTable($pro_id){
 
 		getProDetail($pro_id,$course_id,$year,$term,$stu_grade,$stu_major,$last_update);
 		$course_name=getCourseName($course_id);
+		echo '<div>'.s($year).'学年'.s($term).'学期'.s($course_name).'课的点名情况如下所示';
+		//echo '<p>(此课程年级为'.s($stu_grade).'，专业为'.s($stu_major).'，最后更新时间为'.s($last_update).')：</p>';
+		echo '(最后更新时间'.s($last_update).')：</div>';
+
+		showProStatic($pro_id);
+		echo '<table class="table-bordered" id="tablesort">';
+
+		echo '<thead><tr>';
+		echo '<th>';
+		echo '学号';
+		echo '</th>';
+
+		echo '<th class="no-sort">';
+		echo '姓名';
+		echo '</th>';
+
+		echo '<th>';
+		echo '旷课次数';
+		echo '</th>';
+		echo '</tr></thead>';
+
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			$stu_name=getStuName($row['stu_id']);
+			echo '<tr>';
+
+			echo '<td>';
+			echo $row['stu_id'];
+			echo '</td>';
+
+			
+
+			echo '<td>';
+			echo $stu_name;
+			echo '</td>';
+
+			
+			if (isReachCancelExam($row['pro_id'],$row['stu_id']) == 1) {
+				echo '<td class="danger" data-toggle="tooltip" data-placement="right" title="该生已达到取消考试资格！" >';
+				echo $row['no_sum'];
+				echo '</td>';
+			}else{
+				echo '<td>';
+				echo $row['no_sum'];
+				echo '</td>';
+			}
+			
+
+
+			echo '</tr>';
+
+		}
+		echo '</table>';
+	}
+	
+}
+
+function showSatTable($spro_id){
+	global $db;
+
+	$sql="SELECT * from sat where spro_id= '$spro_id'";
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		$add_student_link='<a href="set_student.php?spro_id='.$spro_id.'">'.lang('add_student').'</a>';
+		echoRed("您课程中没有学生, 请 $add_student_link");
+		die();
+	} else {
+		$array_spro=getArrayFromEntry('spro','spro_id',$spro_id);
+		$year=$array_spro['year'];
+		$term=$array_spro['term'];
+		$course_name=$array_spro['course_name'];
+		$save_time=$array_spro['save_time'];
 		echo '<p>'.s($year).'学年'.s($term).'学期'.s($course_name).'课的点名情况如下所示';
 		//echo '<p>(此课程年级为'.s($stu_grade).'，专业为'.s($stu_major).'，最后更新时间为'.s($last_update).')：</p>';
-		echo '(最后更新时间'.s($last_update).')：</p>';
+		echo '(结课时间'.s($last_update).')：</p>';
 		echo '<table class="table-bordered" id="tablesort">';
 
 		echo '<thead><tr>';
@@ -1646,8 +1742,6 @@ function showAttendTable($pro_id){
 		}
 		echo '</table>';
 	}
-
-	// echo '<a href="'.urlencode($_SERVER['REQUEST_URI']).'">返回</a>';
 	
 }
 
@@ -1851,7 +1945,7 @@ function deleteOne($sql,$ignore_msg = 0){
 function isProHasStudent($pro_id){
 	global $db;
 
-	$sql="SELECT stu_id FROM attend where pro_id= '$pro_id'";
+	$sql="SELECT stu_id FROM attend where pro_id = '$pro_id'";
 	$result = $db->query($sql) or die($db->error);
 	if ($result->num_rows == 0) {
 		return 0;
@@ -1936,8 +2030,13 @@ function echoRed($str){
 	echo '<span style="color:red;">'.$str.'</span>';
 }
 
-function echoGreen($str){
-	echo '<span style="color:green;">'.$str.'</span>';
+function echoGreen($str,$is_block = 0){
+	if ($is_block == 0) {
+		echo '<span style="color:green;">'.$str.'</span>';
+	}elseif ($is_block == 1) {
+		echo '<div style="color:green;">'.$str.'</div>';
+	}
+	
 }
 
 
@@ -2061,9 +2160,47 @@ function echoDiv($str){
 }
 
 
+function showProStatic($pro_id){
+	echo '该班级旷课总人数:';
+	$a=getOneResultByOneQuery("select count(*) from attend where pro_id = '$pro_id' and no_sum != 0");
+	echo $a;
 
+	echo '<br>旷课总次数:';
+	$b=getOneResultByOneQuery("select sum(no_sum) from attend where pro_id = '$pro_id' ");
+	echo $b;
 
+	echo '<br>取消考试资格人数:';
+	$c=getOneResultByOneQuery("select count(*) from attend where pro_id = '$pro_id' and no_sum >= (
 
+select hour/2/3 from project where pro_id = '$pro_id' 
+
+)");
+	echo $c;
+
+	echo '<br>取消考试资格人数所占比例:';
+	$d=getOneResultByOneQuery("select  count(*) from attend where pro_id = '$pro_id' ");
+	echo $d.'%';
+
+}
+
+function isReachCancelExam($pro_id,$stu_id){
+	$a=getOneResultByOneQuery("select count(*) from attend where pro_id = '$pro_id' and stu_id='$stu_id' and no_sum >= (
+
+		select hour/2/3 from project where pro_id = '$pro_id' 
+
+		)");
+
+	//noise($a);
+
+	if ($a=='1') {
+		$reached=1;
+	}else{
+		$reached=0;
+	}
+
+	return $reached;
+
+}
 
 
 
@@ -2113,13 +2250,13 @@ function echoDiv($str){
 
 
 
-function noise($var){
+function noise($var,$var_name=''){
 	if(DEV_MODE == 0){
 		return ;
 	}
-	echo '<p> >>>>>>>>> '.__FUNCTION__.'<br>';
+	echo '<div> >>>>>>>>> '.__FUNCTION__.'('.$var_name.')'.'<br>';
 	echo '<span style="color:red;">'.$var.'</span>';
-	echo '<br> <<<<<<<<< '.__FUNCTION__.'</p>';
+	echo '<br> <<<<<<<<< '.__FUNCTION__.'('.$var_name.')'.'</div>';
 }
 
 

@@ -45,3 +45,10 @@ table th.sort-up:after {
 	border-bottom:none;
 	border-width:4px 4px 0;
 }
+
+/* danger */
+.danger {
+	background-color: #f2dede;
+}
+
+    
