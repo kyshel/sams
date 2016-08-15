@@ -14,6 +14,44 @@ require_once("header.php");
 
 
 <?php
+
+
+
+
+//160815,19:43:14
+
+$a=array (
+  'course_id' => 'B03051100',
+  'year' => '2016-2017',
+  'term' => '1',
+  'hour' => '32',
+  'stu_grade' => '不分年级',
+  'stu_major' => '不分专业',
+  'tea_id' => '1'
+);
+
+$b_n='aaaaaaaa';
+
+$b=array();
+$b['course_name']=$b_n;
+
+
+
+
+// $b=array (
+//   'course_name' => '11111111111',
+
+//   'tea_name' => '22222'
+// );
+
+
+
+$c=array_merge($a, $b);
+
+dev_dump($c);
+
+die();
+
 //160814,11:06:56
 
 isProHasStudent(5)?:die('');

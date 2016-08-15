@@ -538,13 +538,10 @@ function showMenuAccordUserRole(){
 
 	if (DEV_MODE == 1) {
 		echo '
+		<span> | </span>
 		<a href="dev.php">'.lang('dev').'</a>
 		<a href="add.php">'.lang('add').'</a>
 		<a href="show_at.php">'.lang('show_at').'</a> 
-		<a href="manage_pro.php">'.lang('manage_pro').'</a>
-
-		<a href="manage_go.php">'.lang('manage_go').'</a> 
-
 		';
 	}
 	
@@ -555,7 +552,9 @@ function showAdminMenu(){
 	<a href="index.php">'.lang('index').'</a>  
 	<a href="manage_stu.php">'.lang('manage_stu').'</a> 
 	<a href="manage_tea.php">'.lang('manage_teacher').'</a> 
-	<a href="manage_course.php">'.lang('manage_course').'</a>	
+	<a href="manage_course.php">'.lang('manage_course').'</a>
+	<a href="manage_pro.php">'.lang('manage_pro').'</a>	
+<span> | </span>
 	<a href="set_course.php">'.lang('set_course').'</a> 
 
 	';
@@ -564,13 +563,18 @@ function showAdminMenu(){
 
 function showTeacherMenu(){
 	echo '
-	<a href="index.php">'.lang('index').'</a>  
+	<a href="index.php">'.lang('index').'</a>
+	<a href="manage_pro.php">'.lang('manage_pro').'</a>  
+<span> | </span>
 	<a href="set_course.php">'.lang('set_course').'</a> 
 	';
 }
 
 
-function echoButtonOutGrid($table_name,$no_echo,$no_echo_for_special_table = 0){
+
+
+
+function echoButtonOutGrid($table_name,$no_echo=0,$no_echo_for_special_table = 0){
 	if ($no_echo == 1) {
 		return ;
 	}
@@ -590,8 +594,9 @@ function echoButtonOutGrid($table_name,$no_echo,$no_echo_for_special_table = 0){
 		if ($no_echo_for_special_table == 0) {
 			$button_name=lang('add_new_pro');
 			echo '<a href="'.php_self().'?op=add'.'">'.$button_name.'</a>';
+
 			echo '<br><br>';
-			echo '<a href="'.php_self().'?op=show_saved_pro'.'">'.lang('show_saved_pro').'</a>';
+			echo '<a href="'.php_self().'?op=show_off_pro'.'">'.lang('show_saved_pro').'</a>';
 		}
 		
 		break;
@@ -604,6 +609,82 @@ function echoButtonOutGrid($table_name,$no_echo,$no_echo_for_special_table = 0){
 
 	
 }
+
+function showPro($sql,$status= 'on'){
+	global $db;
+	$php_self=php_self();
+
+	runOperateWithGet('project',$sql,'pro_id');
+
+	
+
+	noise($sql);
+
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		$add_course_link='<a href="'.$php_self.'?op=add">'.lang('add_new_pro').'</a>';
+		if ($status == 'on') {
+			echoRed('未设置考勤课程，请添加！');
+		}elseif ($status == 'off') {
+			echoRed('目前没有课程结课！');
+		}
+		
+	} else {
+		echo "<table class='table-bordered'>";
+		echoTableHead('project',$sql,1);		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+
+			echo "<tr>";
+			foreach($row as $x=>$x_value) {
+				echo "<td>" .$x_value."</td>" ;		
+			}
+			// echo op
+			echo "<td>";
+
+			if ($status== 'on') {
+				echoButtonIfAddedStudent('pro_id',$row['pro_id']);		
+
+				echo '<a href="set_student.php?'.'pro_id'.'='.$row['pro_id'].'">';
+				echoAddStudentOrSet($row['pro_id']);
+				echo '</a>';
+				echo '&nbsp;';
+
+				echo '<a href="'.$php_self.'?op=off_pro&'.'pro_id'.'='.$row['pro_id'].'" onclick="';
+				echo "return confirm('您确定结束此课程? \\n这将保存此课程的考勤记录，并且将此课程从考勤列表中删除！');";
+				echo '">'.lang('save_pro').'</a>';
+				echo '&nbsp;';
+
+				echo '<a href="'.$php_self.'?op=del&'.'pro_id'.'='.$row['pro_id'].'" onclick="';
+				echo "return confirm('您确定删除此课程? \\n这将清空所有与此课程相关的点名记录，而且无法撤销！');";
+				echo '">'.red(lang('del')).'</a>';
+			}elseif ($status == 'off') {
+				//echoButtonIfAddedStudent('pro_id',$row['pro_id']);
+				echo '<a href="show_at.php?pro_id='.$row['pro_id'].'">'.lang('show_at').'</a>';
+				echo '&nbsp;';
+			}
+			
+			
+
+			echo "</td>" ;
+			echo "</tr>";
+		}
+	}
+
+	echo '</table>';
+
+	
+	if ($status== 'on') {
+		echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_pro').'</a>';
+		echo '<br><br>';
+		echo '<a href="'.php_self().'?op=show_off_pro'.'">'.lang('show_off_pro').'</a>';
+	}elseif($status== 'off'){
+		echo '<br><br>';
+		echo '<a href="'.php_self().'">'.lang('show_on_pro').'</a>';
+	}
+	
+}
+
+
 
 
 function showGrid($table_name,$sql,$primary_key,$no_op_col=0,$no_op_run=0,$no_out_button=0){
@@ -761,20 +842,12 @@ if (isset($_GET['op'])) {
 			}
 			break;
 
-		case 'save_pro':
-			savePro($_GET[$primary_key]);
+		case 'off_pro':
+			//savePro($_GET[$primary_key]);
+			offPro($_GET[$primary_key]);
 			break;
 
-		case 'show_saved_pro':
-			if ($_SESSION['user_role']=='admin') {			
-				$sql="SELECT * from spro";
-			}elseif ($_SESSION['user_role']=='teacher') {
-				$sql="SELECT * from spro where tea_id ='".$_SESSION['tea_id']."'";
-			}
-			echoDiv('已结课课程：');			
-			showGrid('spro',$sql,'spro_id',0,1,1);
-			echoLink(php_self(),'返回');
-			die();
+		case 'show_off_pro':
 			break;
 		
 		default:
@@ -784,10 +857,19 @@ if (isset($_GET['op'])) {
 }
 }
 
+function offPro($pro_id){
+	$php_self=php_self();
+	updateOne("UPDATE project SET status = 'off' where pro_id = '".$pro_id."'",1);
+	echoGreen('结课成功！',1);
+	echoLink($php_self,'返回');
+	die();
+}
 
+// abandon
 function savePro($pro_id){
 	global $db;
 	$i=0;
+	$php_self=php_self();
 	/* step 0 ,check isProHasStudent */
 	$no_stu_mes=red('所选课程中没有添加学生，无法结课！<br><a href="'.php_self().'">返回</a>');
 	isProHasStudent($pro_id)?:die($no_stu_mes);
@@ -837,7 +919,7 @@ function savePro($pro_id){
 
 	/* step 3 ,confirm save ok */
 	echoGreen('结课成功！',1);
-	echoLink('set_course.php','返回');
+	echoLink($php_self,'返回');
 	die();
 }
 
@@ -865,7 +947,7 @@ function editEntry($table_name,$primary_key,$primary_key_value){
 			echo "<tr>";
 			foreach($row as $x=>$x_value) {
 				echo "<td>";
-				makeAnInput($x,$x_value);
+				echoInput("entry[$x]",$x_value);
 				echo "</td>" ;
 			}
 
@@ -985,12 +1067,12 @@ function updateEntry($table_name,$primary_key,$primary_key_value){
 	global $db;
 	$php_self=php_self();
 	$set_union = '';
-	$post_array = $_POST;
+	$array_entry = $_POST['entry'];
 	$i=0;
 
 	dev_dump($_POST);
 
-	foreach($post_array as $x=>$x_value) {
+	foreach($array_entry as $x=>$x_value) {
 
 		// echo "$x";
 		// echo ".";
@@ -1041,7 +1123,7 @@ function inputNewEntry($table_name){
 			echo "<tr>";
 			foreach($row as $x=>$x_value) {
 				echo "<td>";
-				makeAnInput($x);
+				echoInput("entry[$x]");
 				echo "</td>" ;
 			}
 				// echo "<td>"; 
@@ -1077,14 +1159,21 @@ function insertEntry($table_name){
 
 	if ($table_name == 'project') {		
 		checkProUnique($_POST);
-		checkSproUnique($_POST);
+		//checkSproUnique($_POST);
 	}
 	
 
-	$post_array = $_POST;
+	$array_entry = $_POST['entry'];
+	if ($table_name='project') {
+		$array_entry_add=array();
+		$array_entry_add['course_name']=getCourseName($_POST['entry']['course_id']);
+		$array_entry_add['tea_name']=getTeacherName($_POST['entry']['tea_id']);
+		$array_entry=array_merge($array_entry, $array_entry_add);
+	}
+	dev_dump($array_entry,'array_entry');
 
 	$i=0;
-	foreach($post_array as $x=>$x_value) {
+	foreach($array_entry as $x=>$x_value) {
 		if($i==0){
 			$col_name_str = $col_name_str.$x;
 			$val_name_str = $val_name_str."'".$x_value."'";
@@ -1260,7 +1349,7 @@ function editProjectEntry($table_name,$primary_key,$primary_key_value){
 function inputNewPro($table_name,$user_role=NULL){
 	global $db;
 	$php_self=php_self();
-	$json_array=getArrayFromJsonFile();
+	$array_json=getArrayFromJsonFile();
 
 	echo '<span>添加考勤课程：</span>';
 	echo '<form method="post" action="'.$php_self.'?op=insert">';	
@@ -1277,14 +1366,14 @@ function inputNewPro($table_name,$user_role=NULL){
 
 		echo "<tr>";
 			echo '<td>';
-			makeSelect('course_id',"SELECT DISTINCT course_id from course");
+			makeSelect("entry[course_id]","SELECT DISTINCT course_id from course");
 			echo '</td>';
 
 			
 
 			echo '<td>';
 			echo '
-			<select name="year">
+			<select name="entry[year]">
 				<option>2016-2017</option>
 			</select>
 			';	
@@ -1292,7 +1381,7 @@ function inputNewPro($table_name,$user_role=NULL){
 
 			echo '<td>';
 			echo '
-			<select name="term">
+			<select name="entry[term]">
 				<option>1</option>
 				<option>2</option>
 			</select>
@@ -1300,8 +1389,8 @@ function inputNewPro($table_name,$user_role=NULL){
 			echo '</td>';
 
 			echo '<td>';
-			echo '<select name="hour">';			
-			foreach ($json_array['course_hour'] as $key => $value) {
+			echo '<select name="entry[hour]">';			
+			foreach ($array_json['course_hour'] as $key => $value) {
 				echo '<option>'.$value.'</option>';
 			}
 			echo '</select>';
@@ -1311,19 +1400,19 @@ function inputNewPro($table_name,$user_role=NULL){
 			
 
 			echo '<td>';
-			makeSelect('stu_grade',"SELECT DISTINCT stu_grade from student ",'no_selected',1,'不分年级','不分年级');
+			makeSelect('entry[stu_grade]',"SELECT DISTINCT stu_grade from student ",'no_selected',1,'不分年级','不分年级');
 			echo '</td>';
 
 			echo '<td>';
-			makeSelect('stu_major',"SELECT DISTINCT stu_major from student ",'no_selected',1,'不分专业','不分专业');
+			makeSelect('entry[stu_major]',"SELECT DISTINCT stu_major from student ",'no_selected',1,'不分专业','不分专业');
 			echo '</td>';
 
 			echo '<td>';
 			if ($user_role == 'teacher') {
 				$tea_id=$_SESSION['tea_id'];				
-				makeSelect('tea_id',"SELECT tea_id from teacher where tea_id='$tea_id' ");
+				makeSelect('entry[tea_id]',"SELECT tea_id from teacher where tea_id='$tea_id' ");
 			}else{
-				makeSelect('tea_id',"SELECT DISTINCT tea_id from teacher");				
+				makeSelect('entry[tea_id]',"SELECT DISTINCT tea_id from teacher");				
 			}
 			echo '</td>';
 			
@@ -1337,7 +1426,9 @@ function inputNewPro($table_name,$user_role=NULL){
 	echo "</table>";
 
 	
-	makeAnInput('last_update','从未更新',1,1);
+	echoInput('entry[last_update]','从未更新',1,1);
+	echoInput('entry[status]','on',1,1);
+	echoInput('entry[off_time]','never',1,1);
 	echo '<input type="submit" value="提交">';
 	echo '&nbsp;';
 	echo '<a href="'.$php_self.'">cancel</a>';
@@ -1425,7 +1516,7 @@ function editPro($table_name,$user_role=NULL,$primary_key,$primary_key_value){
 	echo "</table>";
 
 	//make a hidden post_var for tea_id
-	makeAnInput('tea_id',$tea_id,1,1);
+	echoInput('tea_id',$tea_id,1,1);
 	echo '<input type="submit" value="update">';
 	echo '&nbsp;';
 	echo '<a href="'.$php_self.'">cancel</a>';
@@ -1445,7 +1536,7 @@ function editPro($table_name,$user_role=NULL,$primary_key,$primary_key_value){
 
 
 
-function makeAnInput($name,$value = '',$required = 1,$display_none = 0){
+function echoInput($name,$value = '',$required = 1,$display_none = 0){
 	echo '<input type="text" name="'.$name.'" ';
 	if( $value != ''){
 		echo 'value="'.$value.'" ';
@@ -1544,10 +1635,11 @@ function makeSelect($name,$sql,$selected_value=NULL,$ignore_empty=0,$add_option_
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
 			$first_key_value=reset($row);
 
-			if($name=='course_id'){
+
+			if($name=='entry[course_id]'){
 				$course_name=getCourseName($first_key_value);	
 				$text=$first_key_value.'-'.$course_name;			
-			}elseif ($name=='tea_id') {
+			}elseif ($name=='entry[tea_id]') {
 				$tea_name=getTeacherName($first_key_value);
 				$text=$first_key_value.'-'.$tea_name;
 			}else{
@@ -1566,7 +1658,7 @@ function makeSelect($name,$sql,$selected_value=NULL,$ignore_empty=0,$add_option_
 
 
 
-function makeInput($name,$value = '',$required = 1,$display_none = 0){
+function getInput($name,$value = '',$required = 1,$display_none = 0){
 	$str= '<input type="text" name="'.$name.'" ';
 	if( $value != ''){
 		$str.= 'value="'.$value.'" ';
@@ -1841,7 +1933,7 @@ function makeFormForAddStudent($pro_id,$condition=NULL){
 		}		
 	}
 	echo '</table>';
-	echo makeInput('pro_id',$pro_id,1,1);
+	echo getInput('pro_id',$pro_id,1,1);
 	echo '<input type="checkbox" id="add_check_all"/>全选';
 	echo '</form>';
 	
@@ -1869,7 +1961,7 @@ function makeFormForDelStudent($pro_id){
 			echo '</tr>'; 
 		}
 		echo '</table>';
-		echo makeInput('pro_id',$pro_id,1,1);
+		echo getInput('pro_id',$pro_id,1,1);
 		echo '<input type="checkbox" id="del_check_all"/>全选';
 		echo '</form>';
 
@@ -1939,6 +2031,16 @@ function deleteOne($sql,$ignore_msg = 0){
 	if($ignore_msg == 0){
 		$dev_sql_content=(DEV_MODE == 1)?"($sql)":'';
 		echoGreen('Delete success!'.$dev_sql_content); 
+	}
+}
+
+function updateOne($sql,$ignore_msg = 0){
+	global $db;
+	$result = $db->query($sql) or die($db->error);
+	
+	if($ignore_msg == 0){
+		$dev_sql_content=(DEV_MODE == 1)?"($sql)":'';
+		echoGreen('Update success!'.$dev_sql_content); 
 	}
 }
 

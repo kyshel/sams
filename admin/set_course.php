@@ -14,7 +14,7 @@ if ($user_role=='admin') {
 	$sql="SELECT pro_id,course_id,year,term,hour,stu_grade,stu_major from project where tea_id = '$tea_id' order by pro_id";
 }
 
-
+$sql="SELECT * from project order by pro_id";
 showGrid('project',$sql,'pro_id');
 echo '<br><br><span>'.$message.'</span>';
 ?>

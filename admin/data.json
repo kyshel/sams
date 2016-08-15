@@ -29,10 +29,13 @@
 		"term":"学期",
 		"stu_grade":"年级",
 		"stu_major":"专业",
-		"course_id":"课程代码-课程名",
+		"course_id":"课程代码",
+		"course_name":"课程名",
 		"last_update":"点名更新时间",
-		"hour":"课时",
-		"tea_id":"工号-教师名"
+		"tea_id":"工号",
+		"tea_name":"教师名",
+		"hour":"课时"
+		
 	},
 	"spro":
 	{
@@ -89,9 +92,8 @@
 		"index": "首页",
 		"manage_stu": "学生管理",
 		"manage_teacher": "教师管理",
-		"manage_course": "设置课程",
-		"manage_pro": "计划管理",
-		"manage_go": "考勤管理",
+		"manage_course": "课程管理",
+		"manage_pro": "考勤管理",
 
 		"pro_id":"编号",
 		"year":"学年",
@@ -116,7 +118,8 @@
 		"show_at": "查看",
 		"add_new_course": "添加课程",
 		"add_new_pro": "添加考勤课程",
-		"show_saved_pro":"查看已结课的课程",
+		"show_on_pro":"查看正在考勤的课程",
+		"show_off_pro":"查看已结课的课程",
 		"hour": "课时",
 
 		"lala":"啦啦啦"

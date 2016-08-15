@@ -44,6 +44,8 @@ showAttendTable($pro_id);
 	$(document).ready(function() { 
 		new Tablesort(document.getElementById('tablesort'), {	
 		});
+
+		$('.danger').tooltip('show');
 	});
 </script>
 
