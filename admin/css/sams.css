@@ -51,4 +51,22 @@ table th.sort-up:after {
 	background-color: #f2dede;
 }
 
-    
+/* for collapse  */
+.sidebar-collapse{
+	padding-right: 15px;
+	padding-left: 15px;
+	overflow-x: visible;
+	-webkit-overflow-scrolling: touch;
+	border-top: 1px solid transparent;
+	/* -webkit-box-shadow: inset 0 1px 0 rgba(255,255,255,.1); */
+	box-shadow: inset 0 1px 0 rgba(255,255,255,.1);
+}
+
+.kiss_bottom{
+	vertical-align: bottom;
+    /*display: inline-table;*/
+}
+
+.panel-title{
+	display: inline;
+}

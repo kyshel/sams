@@ -1,6 +1,11 @@
 <?php
 require_once("header.php");
-dev_dump(_POST);
+dev_dump($_POST);
+$redirect='<script>window.location.href = "index.php";</script>';
+if (!isset($_POST["pro_id"])) {
+	echo $redirect;
+	die();
+}
 
 $go_id=NULL;
 $stu_id=NULL;
@@ -32,13 +37,15 @@ for($j=0;$j<$stu_sum;$j++){
 }
 ?>
 
-<a href="set_course.php">返回</a><br>
+
+
+<a href="index.php">完成</a>
 <?php
 // show result
-echoGreen('提交成功！');
+echoGreen('提交成功！',1);
 showAttendTable($pro_id);
 ?>
-<a href="set_course.php">返回</a>
+<a href="index.php">完成</a>
 
 <script type="text/javascript">	
 	$(document).ready(function() { 

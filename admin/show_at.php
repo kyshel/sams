@@ -4,6 +4,11 @@ require_once("header.php");
 <script type="text/javascript">	
 	$(document).ready(function() { 
 		new Tablesort(document.getElementById('tablesort'), {	
+			 descending: true
+		});
+
+		document.getElementById('tablesort').addEventListener('afterSort', function() {
+			$('.danger').tooltip('show');
 		});
 
 		$('.danger').tooltip('show');
@@ -23,28 +28,13 @@ if (isset($_POST["pro_id"])) {
 	$pro_id='not_set';
 }
 
-if (isset($_POST["spro_id"])) {
-	$spro_id=$_POST["spro_id"];
-}elseif (isset($_GET["spro_id"])) {
-	$spro_id=$_GET["spro_id"];
-}else{
-	$spro_id='not_set';
-}
 
 if ($pro_id != 'not_set') {
-	
+	echo '<div><a href="manage_pro.php">返回</a></div>';
 	showAttendTable($pro_id);
-
-	echo '<button onclick="window.history.back()">返回</button>';
-	die();
-}elseif ($spro_id != 'not_set') {
-	//echo '(未添加统计分析功能)';
-	showSatTable($spro_id);
-
-	echo '<button onclick="window.history.back()">返回</button>';
+	echo '<a href="manage_pro.php">返回</a>';
 	die();
 }
-
 ?>
 
 
@@ -55,7 +45,6 @@ if ($pro_id != 'not_set') {
 <span>Please choose course:</span>
 <br>
 <?php echoMyCourseSelect($_SESSION['tea_id']);?>
-
 <input type="submit" name="add_submit">
 </form>
 

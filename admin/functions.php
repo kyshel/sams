@@ -345,6 +345,34 @@ function bug_get_go_id($pro_id,$go_time){
 
 
 
+function checkPrimaryKeyUnique($table_name,$pk_name,$pk_value){
+	global $db;
+
+	$year=$pro_array['year'];
+	$term=$pro_array['term'];
+	$course_id=$pro_array['course_id'];
+	$stu_grade=$pro_array['stu_grade'];
+	$stu_major=$pro_array['stu_major'];
+
+	$sql="SELECT * FROM $table_name WHERE
+	    $pk_name='$pk_value'";
+
+	noise($sql);
+
+	$result=$db->query($sql) or die($db->error);
+	if ($result->num_rows != 0) {
+
+		echoRed('该条目已存在！如下所示：',1);				
+		showGrid($table_name,$sql,$pk_name,1,1,1);
+		echo '<a href="set_course.php?op=add">重新添加</a>';
+
+		die();
+		return 0;
+	} else {		
+		return 1;
+	}
+}
+
 function checkProUnique($pro_array){
 	global $db;
 
@@ -369,7 +397,7 @@ function checkProUnique($pro_array){
 
 		echoRed('您要添加的课程已存在！如下所示：');				
 		showGrid('project',$sql,'pro_id',1,1,1);
-		echo '<a href="set_course.php?op=add">重新添加</a>';
+		echo '<a href="manage_pro.php?op=add">重新添加</a>';
 
 		die();
 		return 0;
@@ -378,39 +406,7 @@ function checkProUnique($pro_array){
 	}
 }
 
-function checkSproUnique($pro_array){
-	global $db;
 
-	// should be spro_array, copy paste boy 
-	$year=$pro_array['year'];
-	$term=$pro_array['term'];
-	$course_id=$pro_array['course_id'];
-	$stu_grade=$pro_array['stu_grade'];
-	$stu_major=$pro_array['stu_major'];
-
-	$sql="SELECT * FROM spro WHERE
-	    year='$year'
-	and term='$term'
-	and course_id='$course_id' 
-	and stu_grade='$stu_grade' 
-	and stu_major='$stu_major' 
-	";
-
-	noise($sql);
-
-	$result=$db->query($sql) or die($db->error);
-	if ($result->num_rows != 0) {
-
-		echoRed('您要添加的课程已存在于结课列表中！如下所示：');				
-		showGrid('spro',$sql,'pro_id',1,1,1);
-		echo '<a href="set_course.php?op=add">重新添加</a>';
-
-		die();
-		return 0;
-	} else {		
-		return 1;
-	}
-}
 
 
 
@@ -531,45 +527,28 @@ function showMenuAccordUserRole(){
 	$user_role=$_SESSION['user_role'];
 
 	if ($user_role == 'admin') {
-		showAdminMenu();
+		$array_menu=array('index','manage_stu','manage_tea','manage_course','manage_pro');
 	}elseif($user_role == 'teacher'){
-		showTeacherMenu();
+		$array_menu=array('index','manage_pro');
 	}
+
+	// echo menu
+	foreach ($array_menu as $index => $page_name) {
+		$is_active=(php_self() == $page_name.'.php')?'class = active':'';
+		echo '<li '.$is_active.'><a href="'.$page_name.'.php">'.lang($page_name).'</a></li>  ';		
+	}
+
 
 	if (DEV_MODE == 1) {
 		echo '
-		<span> | </span>
-		<a href="dev.php">'.lang('dev').'</a>
-		<a href="add.php">'.lang('add').'</a>
-		<a href="show_at.php">'.lang('show_at').'</a> 
+		<li><a href="#">-------------------</a></li>
+		<li><a href="dev.php">'.lang('dev').'</a></li>
+		<li><a href="add.php">'.lang('add').'</a></li>
+		<li><a href="show_at.php">'.lang('show_at').'</a></li>
 		';
 	}
 	
 }
-
-function showAdminMenu(){
-	echo '
-	<a href="index.php">'.lang('index').'</a>  
-	<a href="manage_stu.php">'.lang('manage_stu').'</a> 
-	<a href="manage_tea.php">'.lang('manage_teacher').'</a> 
-	<a href="manage_course.php">'.lang('manage_course').'</a>
-	<a href="manage_pro.php">'.lang('manage_pro').'</a>	
-<span> | </span>
-	<a href="set_course.php">'.lang('set_course').'</a> 
-
-	';
-	
-}
-
-function showTeacherMenu(){
-	echo '
-	<a href="index.php">'.lang('index').'</a>
-	<a href="manage_pro.php">'.lang('manage_pro').'</a>  
-<span> | </span>
-	<a href="set_course.php">'.lang('set_course').'</a> 
-	';
-}
-
 
 
 
@@ -579,15 +558,16 @@ function echoButtonOutGrid($table_name,$no_echo=0,$no_echo_for_special_table = 0
 		return ;
 	}
 	$button_name=NULL;
+	$bt_class='btn btn-default';
 	switch ($table_name) {
 		case 'student':
 		$button_name=lang('add_new_stu');
-		echo '<a href="'.php_self().'?op=add'.'" '.$is_display_none.' >'.$button_name.'</a>';
+		echo '<div><a href="'.php_self().'?op=add'.'" class="'.$bt_class.'" >'.$button_name.'</a></div>';
 		break;
 
 		case 'course':
 		$button_name=lang('add_new_course');
-		echo '<a href="'.php_self().'?op=add'.'" '.$is_display_none.' >'.$button_name.'</a>';
+		echo '<div><a href="'.php_self().'?op=add'.'" class="'.$bt_class.'" >'.$button_name.'</a></div>';
 		break;
 
 		case 'project':
@@ -603,7 +583,7 @@ function echoButtonOutGrid($table_name,$no_echo=0,$no_echo_for_special_table = 0
 
 		default:
 		$button_name=lang('add');
-		echo '<a href="'.php_self().'?op=add'.'" '.$is_display_none.' >'.$button_name.'</a>';
+		echo '<a href="'.php_self().'?op=add'.'" class="'.$bt_class.'" >'.$button_name.'</a>';
 		break;
 	}
 
@@ -613,10 +593,9 @@ function echoButtonOutGrid($table_name,$no_echo=0,$no_echo_for_special_table = 0
 function showPro($sql,$status= 'on'){
 	global $db;
 	$php_self=php_self();
+	$panel_title=($status== 'on')?'考勤课程':(($status== 'off')?'已结课':'status_error');
 
 	runOperateWithGet('project',$sql,'pro_id');
-
-	
 
 	noise($sql);
 
@@ -625,12 +604,26 @@ function showPro($sql,$status= 'on'){
 		$add_course_link='<a href="'.$php_self.'?op=add">'.lang('add_new_pro').'</a>';
 		if ($status == 'on') {
 			echoRed('未设置考勤课程，请添加！');
+			echo '<a href="'.php_self().'?op=add'.'" class="" >'.lang('add_new_pro').'</a>';
+			die();
 		}elseif ($status == 'off') {
 			echoRed('目前没有课程结课！');
 		}
 		
 	} else {
-		echo "<table class='table-bordered'>";
+		echo '
+		<div class="panel panel-default">
+			<div class="panel-heading"> 
+				<h3 class="panel-title">'.$panel_title.'</h3>
+				'; 
+				if ($status == 'on') {
+					echo '<a href="'.php_self().'?op=add'.'" class="panel-title pull-right" >'.lang('add_new_pro').'</a>';
+				}
+				
+
+		echo '</div>';
+
+		echo "<table class='table-bordered table' >";
 		echoTableHead('project',$sql,1);		
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
 
@@ -668,19 +661,21 @@ function showPro($sql,$status= 'on'){
 			echo "</td>" ;
 			echo "</tr>";
 		}
+		echo '</table>';
+		echo '</div>';
 	}
-
-	echo '</table>';
 
 	
-	if ($status== 'on') {
-		echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_pro').'</a>';
-		echo '<br><br>';
-		echo '<a href="'.php_self().'?op=show_off_pro'.'">'.lang('show_off_pro').'</a>';
-	}elseif($status== 'off'){
-		echo '<br><br>';
-		echo '<a href="'.php_self().'">'.lang('show_on_pro').'</a>';
-	}
+
+	
+	// if ($status== 'on') {
+	// 	echo '<a href="'.php_self().'?op=add'.'">'.lang('add_new_pro').'</a>';
+	// 	echo '<br><br>';
+	// 	echo '<a href="'.php_self().'?op=show_off_pro'.'">'.lang('show_off_pro').'</a>';
+	// }elseif($status== 'off'){
+	// 	echo '<br><br>';
+	// 	echo '<a href="'.php_self().'">'.lang('show_on_pro').'</a>';
+	// }
 	
 }
 
@@ -695,16 +690,14 @@ global $db;
 $php_self=php_self();
 
 echoButtonOutGrid($table_name,$no_out_button,1);
-echo "<table class='table-bordered'>";
+echo "<table class='table-bordered table'>";
 echoTableHead($table_name,$sql,!$no_op_col);
 
 $result = $db->query($sql);
 if ($result->num_rows == 0) {
-	if ($table_name == 'project') {
-		echoRed('未设置课程，请添加！');
-	}else{
+
 		echoRed('No result!');
-	}	
+	
 } else {		
 	while($row = $result->fetch_array(MYSQLI_ASSOC)){
 
@@ -721,9 +714,7 @@ if ($result->num_rows == 0) {
 			else if ( ($x == 'stu_id') && ($php_self=='show_at.php') && $table_name =='attend') {
 				
 				
-			}
-
-			
+			}		
 			else{
 				echo "<td>" .$x_value."</td>" ;
 			}
@@ -731,37 +722,8 @@ if ($result->num_rows == 0) {
 		}
 		if ($no_op_col == 0) {
 			echo "<td>";
-
-			if ($table_name=='project') {
-				echoButtonIfAddedStudent($primary_key,$row[$primary_key]);		
-
-				echo '<a href="set_student.php?'.$primary_key.'='.$row[$primary_key].'">';
-				echoAddStudentOrSet($row[$primary_key]);
-				echo '</a>';
-				echo '&nbsp;';
-
-				echo '<a href="'.$php_self.'?op=save_pro&'.$primary_key.'='.$row[$primary_key].'" onclick="';
-				echo "return confirm('您确定结束此课程? \\n这将保存此课程的考勤记录，并且将此课程从考勤列表中删除！');";
-				echo '">'.lang('save_pro').'</a>';
-				echo '&nbsp;';
-
-				echo '<a href="'.$php_self.'?op=del&'.$primary_key.'='.$row[$primary_key].'" onclick="';
-				echo "return confirm('您确定删除此课程? \\n这将清空所有与此课程相关的点名记录，而且无法撤销！');";
-				echo '">'.red(lang('del')).'</a>';
-
-
-			}elseif ($table_name=='spro') {
-				echo '<a href="show_at.php?'.$primary_key.'='.$row[$primary_key].'">'.lang('show_at').'</a>';
-
-				// $isAdmin=($_SESSION['user_role'] == 'admin')?1:0;
-				// if ($isAdmin) {
-				// 	echo '&nbsp;';
-				// 	echo '<a href="'.$php_self.'?op=del&'.$primary_key.'='.$row[$primary_key].'" onclick="';
-				// 	echo "return confirm('警告！这是已结课课程，您确定要删除？ \\n请务必在删除前做好考勤记录备份工作，删除后考勤记录无法恢复！');";
-				// 	echo '">'.red(lang('del')).'</a>';
-				// }
-
-			}elseif ($table_name=='student') {
+			// bad for ajax.php , filter
+			if ($table_name=='student') {
 				echo '<a href="manage_stu.php?op=edit&'.$primary_key.'='.$row[$primary_key].'">edit</a>';
 				echo '&nbsp;';
 				echo '<a href="manage_stu.php?op=del&'.$primary_key.'='.$row[$primary_key].'" onclick="';
@@ -775,12 +737,8 @@ if ($result->num_rows == 0) {
 			echo '">del</a>';
 			}
 
-			
-
 			echo "</td>" ;
 		}
-			
-
 		echo "</tr>";
 	}
 }
@@ -1099,7 +1057,7 @@ function updateEntry($table_name,$primary_key,$primary_key_value){
 
 	$result = $db->query($sql) or die($db->error);
 	if ($result == 1) {
-		echoGreen('Update success!');
+		echoGreen('Update success!',1);
 		//echo "<h5>update success!</h5>";
 	}
 }
@@ -1158,19 +1116,28 @@ function insertEntry($table_name){
 	dev_dump($_POST);
 
 	if ($table_name == 'project') {		
-		checkProUnique($_POST);
-		//checkSproUnique($_POST);
+		checkProUnique($_POST['entry']);
+	}else{
+		$pk_name=getPrimaryKeyName($table_name);
+		$pk_value=$_POST['entry'][$pk_name];
+		checkPrimaryKeyUnique($table_name,$pk_name,$pk_value);
 	}
+
 	
 
 	$array_entry = $_POST['entry'];
-	if ($table_name='project') {
+	if ($table_name=='project') {
 		$array_entry_add=array();
 		$array_entry_add['course_name']=getCourseName($_POST['entry']['course_id']);
 		$array_entry_add['tea_name']=getTeacherName($_POST['entry']['tea_id']);
 		$array_entry=array_merge($array_entry, $array_entry_add);
 	}
 	dev_dump($array_entry,'array_entry');
+	foreach($array_entry as $a=>$b) {
+		if (empty($b)) {
+			die('entry has empty value');
+		}
+	}
 
 	$i=0;
 	foreach($array_entry as $x=>$x_value) {
@@ -1194,7 +1161,7 @@ function insertEntry($table_name){
 
 	$result = $db->query($sql) or die($db->error);
 	if ($result == 1) {
-		echoGreen('添加成功!'); 
+		echoGreen('添加成功!',1); 
 	}
 
 	// auto add students to course , if major&grade has set
@@ -1202,7 +1169,7 @@ function insertEntry($table_name){
 	if ($table_name=='project') {
 		$pro_id=getLastInsertID();
 		//noise($pro_id);
-		if ($_POST['stu_major']!='不分专业' && $_POST['stu_grade'] != '不分年级') {
+		if ($_POST['entry']['stu_major']!='不分专业' && $_POST['entry']['stu_grade'] != '不分年级') {
 			$sql2="SELECT stu_id FROM student WHERE 1".$stu_major.$stu_grade;
 			//noise($sql2);
 			$stu_array=getArrayBySql($sql2,'stu_id');
@@ -1247,7 +1214,7 @@ function delEntry($table_name,$primary_key,$primary_key_value){
 	WHERE $primary_key = '$primary_key_value' ";
 	$result = $db->query($sql) or die($db->error);
 
-	echoGreen("Delete $table_name with $primary_key = $primary_key_value  success!");
+	echoGreen("Delete $table_name with $primary_key = $primary_key_value  success!",1);
 	
 }
 
@@ -1562,7 +1529,7 @@ function deleteAttendByPro($pro_id,$ignore_msg=0){
 
 	if($ignore_msg == 0){
 		$dev_sql_content=(DEV_MODE == 1)?"($sql)":'';
-		echoGreen('Delete attend with pro_id = $pro_id success!'.$dev_sql_content); 
+		echoGreen('Delete attend with pro_id = $pro_id success!'.$dev_sql_content,1); 
 	}
 
 }
@@ -1615,7 +1582,8 @@ function getLastInsertID(){
 
 function makeSelect($name,$sql,$selected_value=NULL,$ignore_empty=0,$add_option_text='not_set',$add_option_value='not_set',$add_property='not_set'){
 	global $db;
-	echo '<select name="'.$name.'" ';
+	$bootstrap_class='form-control ';
+	echo '<select name="'.$name.'" class="'.$bootstrap_class.'"';
 	if ($add_property !='not_set') {
 		echo $add_property;
 	}
@@ -1910,25 +1878,35 @@ function makeFormForAddStudent($pro_id,$condition=NULL){
 	global $db;
 
 	if ($condition==NULL) {
-		$sql="SELECT * FROM student";
+		$sql="SELECT stu_id,stu_name,stu_sex,stu_grade,stu_dep,stu_major FROM student";
 		echo '<span>所有学生：</span>';
 	}else{		
 		$sql=buildFilterStuSql($condition);
 		echo '<span>过滤结果：</span>';
 	}
-	echo '<form id="add_form">';
-	echo '<table class="table-bordered">';	
+
 	$result = $db->query($sql) or die($db->error);
 	if ($result->num_rows == 0) {
 		echoRed('结果为空，请重新设置过滤条件！');
 		die();
-	} else {		
+	} else {
+		echo '<form id="add_form">';
+		echo '<table class="table-bordered">';
+		//echoTableHead('student',$sql);	
+
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
 			echo '<tr>';
 			$stu_id=$row['stu_id'];
 			$isDisable=isStudentAddedToCourse($pro_id,$stu_id)?'disabled checked':'class="add_check_box"';
 				echo '<td>'.'<input type="checkbox" name="stu_id[]" value="'.$stu_id.'" '.$isDisable.'>'.$stu_id.'</td>';
 				echo '<td>'.$row['stu_name'].'</td>';
+				// echo '<td>'.$row['stu_sex'].'</td>';
+				// echo '<td>'.$row['stu_grade'].'</td>';
+				// echo '<td>'.$row['stu_dep'].'</td>';
+				// echo '<td>'.$row['stu_major'].'</td>';
+
+
+
 			echo '</tr>'; 
 		}		
 	}
@@ -1958,6 +1936,7 @@ function makeFormForDelStudent($pro_id){
 			$stu_name=getStuName($stu_id);
 				echo '<td>'.'<input type="checkbox" name="stu_id[]" value="'.$stu_id.'" class="del_check_box" >'.$stu_id.'</td>';
 				echo '<td>'.$stu_name.'</td>';
+
 			echo '</tr>'; 
 		}
 		echo '</table>';
@@ -1965,7 +1944,7 @@ function makeFormForDelStudent($pro_id){
 		echo '<input type="checkbox" id="del_check_all"/>全选';
 		echo '</form>';
 
-		echo '<button onclick="del()" value="" class="btn-danger">删除</button>';		
+		echo '<button onclick="del()" value="" class="btn-danger">移除</button>';		
 	}
 	
 }
@@ -2020,7 +1999,7 @@ function insertOne($sql,$ignore_msg = 0){
 
 	if($ignore_msg == 0){
 		$dev_sql_content=(DEV_MODE == 1)?"($sql)":'';
-		echoGreen('Insert success!'.$dev_sql_content); 
+		echoGreen('Insert success!'.$dev_sql_content,1); 
 	}
 }
 
@@ -2030,7 +2009,7 @@ function deleteOne($sql,$ignore_msg = 0){
 	
 	if($ignore_msg == 0){
 		$dev_sql_content=(DEV_MODE == 1)?"($sql)":'';
-		echoGreen('Delete success!'.$dev_sql_content); 
+		echoGreen('Delete success!'.$dev_sql_content,1); 
 	}
 }
 
@@ -2040,7 +2019,7 @@ function updateOne($sql,$ignore_msg = 0){
 	
 	if($ignore_msg == 0){
 		$dev_sql_content=(DEV_MODE == 1)?"($sql)":'';
-		echoGreen('Update success!'.$dev_sql_content); 
+		echoGreen('Update success!'.$dev_sql_content,1); 
 	}
 }
 
@@ -2048,6 +2027,20 @@ function isProHasStudent($pro_id){
 	global $db;
 
 	$sql="SELECT stu_id FROM attend where pro_id = '$pro_id'";
+	$result = $db->query($sql) or die($db->error);
+	if ($result->num_rows == 0) {
+		return 0;
+	} else {		
+		return 1;
+	}
+}
+
+
+
+function isAnyProOff(){
+	global $db;
+
+	$sql="SELECT * FROM project where status = 'off'";
 	$result = $db->query($sql) or die($db->error);
 	if ($result->num_rows == 0) {
 		return 0;
@@ -2128,15 +2121,19 @@ function s($str){
 
 
 
-function echoRed($str){
-	echo '<span style="color:red;">'.$str.'</span>';
+function echoRed($str,$is_block = 0){
+	if ($is_block == 0) {
+		echo '<span style="color:red;">'.$str.'</span>';
+	}elseif ($is_block == 1) {
+		echo '<div style="color:red;">'.$str.'</div>';
+	}
 }
 
 function echoGreen($str,$is_block = 0){
 	if ($is_block == 0) {
-		echo '<span style="color:green;">'.$str.'</span>';
+		echo '<span style="color:green;" class="alert alert-success" role="alert">'.$str.'</span>';
 	}elseif ($is_block == 1) {
-		echo '<div style="color:green;">'.$str.'</div>';
+		echo '<div style="color:green;" class="alert alert-success" role="alert">'.$str.'</div>';
 	}
 	
 }
@@ -2356,9 +2353,13 @@ function noise($var,$var_name=''){
 	if(DEV_MODE == 0){
 		return ;
 	}
-	echo '<div> >>>>>>>>> '.__FUNCTION__.'('.$var_name.')'.'<br>';
+	echo '<a class="" type="button" data-toggle="collapse" data-target="#collapse_noise_'.$var_name.'" aria-expanded="false" aria-controls="collapse_noise_'.$var_name.'">Show '.__FUNCTION__.'('.$var_name.')</a>';
+	echo '<div class="noise_div" id="collapse_noise_'.$var_name.'">';
+	echo ' >>>>>>>>> '.__FUNCTION__.'('.$var_name.')'.'<br>';
 	echo '<span style="color:red;">'.$var.'</span>';
 	echo '<br> <<<<<<<<< '.__FUNCTION__.'('.$var_name.')'.'</div>';
+
+
 }
 
 
@@ -2380,10 +2381,12 @@ function dev_dump($var,$var_name=''){
 	if(DEV_MODE == 0){
 		return ;
 	}
-	echo '<div><span>  >>>>>>>> '.__FUNCTION__.'('.$var_name.')';
+	echo '<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapse_dev_dump_'.$var_name.'" aria-expanded="false" aria-controls="collapse_dev_dump_'.$var_name.'">Show '.__FUNCTION__.'('.$var_name.')</button>';
+
+	echo '<div class="collapse" id="collapse_dev_dump_'.$var_name.'"><span>  >>>>>>>> '.__FUNCTION__.'('.$var_name.')';
 	echo '<pre>' . var_export($var, true) . '</pre>';
 	echo ' <<<<<<<<< '.__FUNCTION__.'('.$var_name.')</span></div>';
-
+	echo "";
 }
 
 

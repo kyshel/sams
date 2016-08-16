@@ -2,10 +2,7 @@
 require_once("header.php");
 $pro_id=isset($_GET['pro_id']) ? $_GET['pro_id'] : die(' pro_id is not set');
 
-//echo '<a class="btn btn-default btn-sm" href="set_course.php"><<返回</a>';
-echo '<a href="set_course.php"><<返回</a>';
-//echo '&nbsp';;
-//echo '<a href="add_main.php?pro_id='.$pro_id.'">点名</a>';
+echo '<a href="manage_pro.php" >完成</a>';
 getProDetail($pro_id,$course_id,$year,$term,$stu_grade,$stu_major,$last_update);
 $course_name=getCourseName($course_id);
 echo '<br><span>您选择的课程为：'.s($year).'学年，'.s($term).'学期，'.s($course_name).'，年级为'.s($stu_grade).'，专业为'.s($stu_major).'</span>';
@@ -15,7 +12,7 @@ echo '<br><span>您选择的课程为：'.s($year).'学年，'.s($term).'学期�
 	#right_div,#filter_div{
 		border-style: solid;
 		border-color: #eee;
-		width:400px;
+		width:500px;
 	}
 	/* td ceiling*/
 	td{
@@ -45,6 +42,7 @@ echo '<br><span>您选择的课程为：'.s($year).'学年，'.s($term).'学期�
 
 			
 			<div id="left_div"><?php makeFormForAddStudent($pro_id); ?></div>
+
 			</div>		
 		</td>
 		<td>
@@ -99,7 +97,7 @@ function add(){
 
 function del(){
 
-	var confirm_del=confirm('删除选中的学生将同时删除学生对应的旷课记录！\n您确定要删除？');
+	var confirm_del=confirm('移除选中的学生将同时删除学生对应的旷课记录！\n您确定要移除？');
 	if (confirm_del == false) {
 		return;
 	}

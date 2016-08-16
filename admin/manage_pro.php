@@ -22,6 +22,17 @@ if ($user_role=='admin') {
 
 }
 
+
 showPro($sql,$status);
+
+
+
+if ($status== 'on' && isAnyProOff() ) {
+	echo '<br><br>';
+	echo '<a href="'.php_self().'?op=show_off_pro'.'">'.lang('show_off_pro').'</a>';
+}elseif($status== 'off'){
+	echo '<br><br>';
+	echo '<a href="'.php_self().'">'.lang('show_on_pro').'</a>';
+}
 echo '<br><br><span>'.$message.'</span>';
 ?>

@@ -12,30 +12,6 @@ if ( isset( $_GET['getAddedDate'] ) ) {
 } 
 
 
-
-// add students
-//var_dump($_GET);
-// $op=isset($_GET['op']) ? $_GET['op'] : 'not_set';
-// if ($op == 'not_set') {
-// }elseif ($op == 'add') {
-// 	$stu_id = isset($_GET['stu_id']) ? $_GET['stu_id'] : die(' stu_id is not set');
-// 	$pro_id = isset($_GET['pro_id']) ? $_GET['pro_id'] : die(' pro_id is not set');
-// 	$sql_add="INSERT into attend(pro_id,stu_id,no_sum) values('$pro_id','$stu_id',0)";
-// 	insertOne($sql_add);
-// 	makeTableForAddedStudent($pro_id);
-// }elseif ($op == 'del') {
-// 	$stu_id = isset($_GET['stu_id']) ? $_GET['stu_id'] : die(' stu_id is not set');
-// 	$pro_id = isset($_GET['pro_id']) ? $_GET['pro_id'] : die(' pro_id is not set');
-// 	$sql_del="DELETE FROM attend where pro_id = '$pro_id' and stu_id = '$stu_id' ";
-// 	delOne($sql_del);
-// 	makeTableForAddedStudent($pro_id);
-// }elseif ($op == 'add_refresh') {
-// 	$pro_id = isset($_GET['pro_id']) ? $_GET['pro_id'] : die(' pro_id is not set');
-// 	makeTableForAddStudent($pro_id);
-// }
-
-
-
 // set student
 $action=isset($_GET['action']) ? $_GET['action'] : 'action not_set';
 switch ($action) {
@@ -69,10 +45,15 @@ switch ($action) {
 
 	case 'filter_stu_for_manage':
 		$condition_array=$_POST['condition'];
-		echo '<span>过滤结果：<span><br>';
+		echo '
+		<div class="panel panel-success">
+			<div class="panel-heading"> 
+				<h3 class="panel-title">过滤结果</h3> 
+			</div> 
+			';
 		// bad ways, edit link not calc auto
 		showGrid('student',buildFilterStuSql($condition_array),'stu_id',0,0,1);
-		echo '<a href="manage_stu.php?op=add">'.lang('add_new_stu').'</a>';
+		//echo '<a href="manage_stu.php?op=add">'.lang('add_new_stu').'</a>';
 		break;
 
 	// never use
