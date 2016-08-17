@@ -19,6 +19,10 @@ switch ($action) {
 		//var_dump($_POST);
 		$pro_id=$_POST['pro_id'];
 		$stu_array=$_POST['stu_id'];
+		if (empty($array_stu)) {
+			echo '<div class="alert alert-danger" role="alert">你没有选择学生!</div>';
+			die();
+		}
 		addStudentToCourse($pro_id,$stu_array);
 		echoGreen('添加成功!',1);
 		makeFormForDelStudent($pro_id);
@@ -47,15 +51,29 @@ switch ($action) {
 
 	case 'filter_stu_for_manage':
 		$condition_array=$_POST['condition'];
+		dev_dump($condition_array,'condition_array');
 		echo '
 		<div class="panel panel-success">
 			<div class="panel-heading"> 
-				<h3 class="panel-title">过滤结果</h3> 
+				<h3 class="panel-title">过滤结果 </h3>';
+					foreach ($condition_array as $key => $value) {
+						if (!empty($value)) {
+							echo '&nbsp;&nbsp;';
+							$key_name=lang($key);
+							echoSpan($key_name.':'.$value,'label label-warning panel-title0');
+						}
+						
+						
+					}
+				echo '
+				
+				<a href="manage_stu.php" class="pull-right"><h3 class="panel-title">全部学生</h3></a> 
 			</div> 
 			';
+
 		// bad ways, edit link not calc auto
-		showGrid('student',buildFilterStuSql($condition_array),'stu_id',0,0,1);
-		//echo '<a href="manage_stu.php?op=add">'.lang('add_new_stu').'</a>';
+		showGrid('student',buildFilterStuSql($condition_array),'stu_id',0,0,1,1);
+		
 		break;
 
 	case 'show_static':

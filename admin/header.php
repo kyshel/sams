@@ -16,6 +16,7 @@ require_once("auth.php");
 <link rel="stylesheet" href="css/sams.css">
 <link rel="stylesheet" href="css/dashboard.css">
 <?php dynamicCssJsLib(); ?>
+<script src="js/validator.min.js"></script>
 
 <script type="text/javascript">
 	$(document).ready(function() { 

@@ -748,7 +748,7 @@ function showPro($sql,$status= 'on'){
 
 
 
-function showGrid($table_name,$sql,$primary_key,$no_op_col=0,$no_op_run=0,$no_out_button=0){
+function showGrid($table_name,$sql,$primary_key,$no_op_col=0,$no_op_run=0,$no_out_button=0,$no_panel=0){
 if ($no_op_run == 0) {
 	runOperateWithGet($table_name,$sql,$primary_key);
 }
@@ -761,20 +761,20 @@ echoButtonOutGrid($table_name,$no_out_button,1);
 
 $result = $db->query($sql);
 if ($result->num_rows == 0) {
-
-		echoRed('No result!');
-	
+	echoRed('No result!');
 } else {	
-echo '
-<div class="panel panel-default">
-	<div class="panel-heading"> 
-		<h3 class="panel-title">'.lang($table_name).'</h3> 
-		<a href="'.php_self().'?op=add'.'" class="panel-title pull-right" >'.lang('add').'</a>
-	</div> 
-	
-	';
-echo "<table class='table-bordered table'>";
-echoTableHead($table_name,$sql,!$no_op_col);	
+	if ($no_panel == 0) {
+		echo '
+		<div class="panel panel-default">
+			<div class="panel-heading"> 
+				<h3 class="panel-title">'.lang($table_name).'</h3> 
+				<a href="'.php_self().'?op=add'.'" class="pull-right" ><h3 class="panel-title">'.lang('add').'</h3></a>
+			</div> 
+			';
+	}
+
+	echo "<table class='table-bordered table'>";
+	echoTableHead($table_name,$sql,!$no_op_col);	
 	while($row = $result->fetch_array(MYSQLI_ASSOC)){
 
 		echo "<tr>";
@@ -819,7 +819,10 @@ echoTableHead($table_name,$sql,!$no_op_col);
 	}
 }
 
-echo '</table></div>';
+echo '</table>';
+if ($no_panel == 0) {
+	echo '</div>';
+}
 echoButtonOutGrid($table_name,$no_out_button);
 
 
@@ -893,10 +896,13 @@ if (isset($_GET['op'])) {
 
 function offPro($pro_id){
 	$php_self=php_self();
+	$now_time=getNowTime();
+
 	$no_stu_mes=red('所选课程中没有添加学生，无法结课！<br><a href="'.php_self().'">返回</a>');
 	isProHasStudent($pro_id)?:die($no_stu_mes);
 
 	updateOne("UPDATE project SET status = 'off' where pro_id = '".$pro_id."'",1);
+	updateOne("UPDATE project SET off_time = '".$now_time."' where pro_id = '".$pro_id."'",1);
 	echoGreen('结课成功！',1);
 	echoLink($php_self,'返回');
 	die();
@@ -984,7 +990,7 @@ function editEntry($table_name,$primary_key,$primary_key_value){
 			echo "<tr>";
 			foreach($row as $x=>$x_value) {
 				echo "<td>";
-				echoInput("entry[$x]",$x_value);
+				echoInput("entry[$x]",$x_value,'text');
 				echo "</td>" ;
 			}
 
@@ -1147,8 +1153,8 @@ function inputNewEntry($table_name){
 	$sql="SELECT * from $table_name";
 	$php_self=php_self();
 
-	echo '<form method="post" action="'.$php_self.'?op=insert">';
-	echo "<table class='table-bordered'>";
+	echo '<form method="post" action="'.$php_self.'?op=insert" role="form" data-toggle="validator">';
+	echo "<table class='table-bordered table'>";
 	echoTableHead($table_name,$sql);
 
 	$result = $db->query($sql);
@@ -1160,7 +1166,7 @@ function inputNewEntry($table_name){
 			echo "<tr>";
 			foreach($row as $x=>$x_value) {
 				echo "<td>";
-				echoInput("entry[$x]");
+				makeElementForEntry("entry[$x]");				
 				echo "</td>" ;
 			}
 				// echo "<td>"; 
@@ -1184,7 +1190,111 @@ function inputNewEntry($table_name){
 	die();
 }
 
-//must have POST , all the column must char
+function makeElementForEntry($name,$value=''){
+	echo '<div class="form-group has-feedback';
+	$is_input=NULL;
+	//$array_is_input = array('entry[stu_id]' => 1, );
+	//dev_dump($array_is_input,'array_is_input');
+	switch ($name) {
+		case 'entry[stu_id]':
+			$is_input=1;		
+			echo (($is_input==1)?'':'0').'">';
+			$help_block='十位数';
+			$data_error='输入错误！';
+			echoInput($name,$value = '','text',1,0,'form-control','maxlength="10" pattern="\d{10}" data-error="'.$data_error.'" ');
+			break;
+
+		case 'entry[stu_name]':
+			$is_input=1;		
+			echo (($is_input==1)?'':'0').'">';
+			$help_block='';
+			$data_error='输入错误！';
+			echoInput($name,$value = '','text',1,0,'form-control','maxlength="20" data-error="'.$data_error.'" ');
+			break;
+			
+		case 'entry[stu_sex]':
+			$is_input=0;		
+			echo (($is_input==1)?'':'0').'">';
+			echo '
+			<select name="'.$name.'" class="form-control">
+				<option value="男">男</option>
+				<option value="女">女</option>
+			</select>
+			';
+			break;
+
+		case 'entry[stu_dep]':
+			$is_input=0;		
+			echo (($is_input==1)?'':'0').'">';
+			echo '<select name="'.$name.'" class="form-control">';
+			$array=getArrayFromJsonFile();
+			$array_dep=$array['school_dep'];
+			foreach ($array_dep as $dep_code => $dep_name) {
+				if (!empty($dep_name)) {
+					//noise($key.'-'.$dep_name);
+					makeOption($dep_name,$dep_name);
+				}				
+			}
+			
+			echo '</select>';
+			break;
+
+		case 'entry[stu_major]':
+			$is_input=1;		
+			echo (($is_input==1)?'':'0').'">';
+			$help_block='';
+			$data_error='输入错误！';
+			echoInput($name,$value = '','text',1,0,'form-control','maxlength="20" data-error="'.$data_error.'" ');
+			break;
+
+		case 'entry[stu_grade]':
+			$is_input=0;		
+			echo (($is_input==1)?'':'0').'">';
+			echo '<select name="'.$name.'" class="form-control">';
+			$this_year=date('Y');
+			$year_num=intval($this_year);
+			for ($i=0; $i <=4 ; $i++) { 				
+				makeOption($year_num,$year_num);
+				$year_num--;
+			}
+			
+			echo '</select>';
+			break;
+
+		case 'entry[stu_class]':
+			$is_input=0;		
+			echo (($is_input==1)?'':'0').'">';
+			echo '<select name="'.$name.'" class="form-control">';
+
+			for ($i=1; $i <=9 ; $i++) { 				
+				makeOption($i,$i);
+				$year_num--;
+			}
+			
+			echo '</select>';
+			break;
+
+		case 'entry[stu_sex]':
+			echo '
+			<select name="entry[stu_sex]" class="form-control">
+				<option value="男">男</option>
+				<option value="女">女</option>
+			</select>
+			';
+			break;
+
+		
+
+		default:
+			//echoInput($name);
+			break;
+	}
+	echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span><div class="help-block with-errors">'.$help_block.'</div></div>';
+}
+
+
+
+//must have POST 
 function insertEntry($table_name){
 	global $db;
 	$php_self=php_self();
@@ -1248,8 +1358,10 @@ function insertEntry($table_name){
 		$pro_id=getLastInsertID();
 		//noise($pro_id);
 		if ($_POST['entry']['stu_major']!='不分专业' && $_POST['entry']['stu_grade'] != '不分年级') {
+			$stu_major=" and stu_major ='".$_POST['entry']['stu_major']."'";
+			$stu_grade=" and stu_grade ='".$_POST['entry']['stu_grade']."'";
 			$sql2="SELECT stu_id FROM student WHERE 1".$stu_major.$stu_grade;
-			//noise($sql2);
+			noise($sql2,'sql2');
 			$stu_array=getArrayBySql($sql2,'stu_id');
 			addStudentToCourse($pro_id,$stu_array);
 			//showStudentInCourse($pro_id);
@@ -1476,9 +1588,9 @@ function inputNewPro($table_name,$user_role=NULL){
 	echo "</table>";
 
 	
-	echoInput('entry[last_update]','从未更新',1,1);
-	echoInput('entry[status]','on',1,1);
-	echoInput('entry[off_time]','never',1,1);
+	echoInput('entry[last_update]','从未更新','text',1,1);
+	echoInput('entry[status]','on','text',1,1);
+	echoInput('entry[off_time]','never','text',1,1);
 	echo '<input type="submit" value="提交">';
 	echo '&nbsp;';
 	echo '<a href="'.$php_self.'">cancel</a>';
@@ -1566,7 +1678,7 @@ function editPro($table_name,$user_role=NULL,$primary_key,$primary_key_value){
 	echo "</table>";
 
 	//make a hidden post_var for tea_id
-	echoInput('tea_id',$tea_id,1,1);
+	echoInput('tea_id',$tea_id,'text',1,1);
 	echo '<input type="submit" value="update">';
 	echo '&nbsp;';
 	echo '<a href="'.$php_self.'">cancel</a>';
@@ -1586,8 +1698,8 @@ function editPro($table_name,$user_role=NULL,$primary_key,$primary_key_value){
 
 
 
-function echoInput($name,$value = '',$required = 1,$display_none = 0){
-	echo '<input type="text" name="'.$name.'" ';
+function echoInput($name,$value = '',$type='text',$required = 1,$display_none = 0,$class='',$add_attr){
+	echo '<input type="'.$type.'" name="'.$name.'" ';
 	if( $value != ''){
 		echo 'value="'.$value.'" ';
 	}
@@ -1597,7 +1709,7 @@ function echoInput($name,$value = '',$required = 1,$display_none = 0){
 	if($display_none == 1){
 		echo 'style="display: none;" ';
 	}
-	echo '>';
+	echo 'class="'.$class.'" '.$add_attr.' >';
 }
 
 
@@ -1612,7 +1724,7 @@ function deleteAttendByPro($pro_id,$ignore_msg=0){
 
 	if($ignore_msg == 0){
 		$dev_sql_content=(DEV_MODE == 1)?"($sql)":'';
-		echoGreen('Delete attend with pro_id = $pro_id success!'.$dev_sql_content,1); 
+		echoGreen('Delete attend with pro_id = '.$pro_id.' success!'.$dev_sql_content,1); 
 	}
 
 }
@@ -1892,7 +2004,6 @@ function showSatTable($spro_id){
 
 
 function getNowTime(){
-	date_default_timezone_set('Asia/Shanghai');
 	$now = date('Y-m-d H:i:s', time());
 	return $now;
 }
@@ -1921,7 +2032,7 @@ function delStudentFromCourse($pro_id,$stu_array){
 function addStudentToCourse($pro_id,$array_stu){
 	dev_dump($array_stu,'array_stu');
 	if (empty($array_stu)) {
-		echo '<div class="alert alert-danger" role="alert">你没有选择学生!</div>';
+		noise('$array_stu is empty!');
 		die();
 	}
 	foreach ($array_stu as $key => $value) {			
@@ -1956,6 +2067,7 @@ function buildFilterStuSql($condition){
 	$stu_id_con=" and stu_id LIKE '%".$id."%'";
 
 	$sql="SELECT * FROM student WHERE 1 ".$stu_dep_con.$stu_major_con.$stu_grade_con.$stu_id_con;
+	
 	noise($sql);
 
 	return $sql;
@@ -2342,10 +2454,13 @@ function lang($en){
 }
 
 
-function echoDiv($str){
-	echo '<div>'.$str.'</div>';
+function echoDiv($str,$class){
+	echo '<div class="'.$class.'">'.$str.'</div>';
 }
 
+function echoSpan($str,$class){
+	echo '<span class="'.$class.'">'.$str.'</span>';
+}
 
 function showProStatic($pro_id){
 	echo '该班级旷课总人数:';
@@ -2441,9 +2556,8 @@ function noise($var,$var_name=''){
 	if(DEV_MODE == 0){
 		return ;
 	}
-	echo '<a class="" type="button" data-toggle="collapse" data-target="#collapse_noise_'.$var_name.'" aria-expanded="false" aria-controls="collapse_noise_'.$var_name.'">Show '.__FUNCTION__.'('.$var_name.')</a>';
+	echo '<button class="" type="button" data-toggle="collapse" data-target="#collapse_noise_'.$var_name.'" aria-expanded="false" aria-controls="collapse_noise_'.$var_name.'"> >>>>>>>>> '.__FUNCTION__.'('.$var_name.')</button>';
 	echo '<div class="noise_div" id="collapse_noise_'.$var_name.'">';
-	echo ' >>>>>>>>> '.__FUNCTION__.'('.$var_name.')'.'<br>';
 	echo '<span style="color:red;">'.$var.'</span>';
 	echo '<br> <<<<<<<<< '.__FUNCTION__.'('.$var_name.')'.'</div>';
 

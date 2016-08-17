@@ -12,11 +12,31 @@ require_once("header.php");
 <script src="js/bootstrap-switch.min.js"></script>
 
 
+<form data-toggle="validator" role="form">
+
+
+
+  <div class="form-group has-feedback">  
+    <input type="text" class="form-control" pattern="\d{10}" data-error="格式错误" required>
+    
+    <span class="glyphicon form-control-feedback" aria-hidden="true"></span>
+    <div class="help-block with-errors">十位数</div>
+  </div>
+
+
+ 
+  <div class="form-group">
+    <button type="submit" class="btn btn-primary">Submit</button>
+  </div>
+</form>
+
+
+
 
 <?php
 
 
-
+die();
 
 //160815,19:43:14
 
