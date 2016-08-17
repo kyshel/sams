@@ -31,7 +31,7 @@ echo '<input name="update_time" value="'.$update_time.'" style="display:none;" >
 <?php addNewAt($pro_id); ?>
 <input type="submit" name="add_data_submit" value="提交">
 <!-- <button onclick="window.history.back()">取消</button> -->
-<a href="set_course.php">取消</a>
+<a href="manage_pro.php">取消</a>
 </form>
 
 

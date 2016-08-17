@@ -96,7 +96,7 @@ function echoMyCourseSelect($tea_id){
 	$course_id=NULL;
 	echo '<select name="pro_id" required  id="course_list">';
 
-	$sql="SELECT pro_id,course_id,year,term
+	$sql="SELECT *
 	from project
 	where tea_id = $tea_id";
 
@@ -107,17 +107,80 @@ function echoMyCourseSelect($tea_id){
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
 			$course_id = $row['course_id'] ;
 			$course_name = getCourseName($course_id);
+			$status= ($row['status']=='on')?'未结课':(($row['status']=='off')?'已结课':'');
 			
 			echo "<option value='".$row['pro_id']."'>" 
 			. $course_name."，"
 			. $row['year']."学年，第"
-			. $row['term']."学期"
+			. $row['term']."学期-"
+			. $row['stu_grade']."-"
+			. $row['stu_major']."-"
+			. $status
 			. "</option>";
 		}
 	}
 
 	echo '</select>';
 }
+
+function echoProSelect(){
+	global $db;
+	$course_id=NULL;
+	echo '<select name="pro_id" required  id="course_list">';
+
+	$sql="SELECT *
+	from project";
+
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echo "<option>Please add your course first</option>";
+    } else {
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			$course_id = $row['course_id'] ;
+			$course_name = getCourseName($course_id);
+			$status= ($row['status']=='on')?'未结课':(($row['status']=='off')?'已结课':'');
+			
+			echo "<option value='".$row['pro_id']."'>" 
+			. $course_name."，"
+			. $row['year']."学年，第"
+			. $row['term']."学期-"
+			. $row['stu_grade']."-"
+			. $row['stu_major']."-"
+			. $status
+			. "</option>";
+		}
+	}
+
+	echo '</select>';
+}
+
+function echoClassSelect(){
+	global $db;
+	$course_id=NULL;
+	
+	$sql="SELECT * from student 
+	WHERE stu_major IS NOT NULL 
+	and stu_major IS NOT NULL 
+	and stu_class IS NOT NULL 
+	group by stu_grade,stu_major,stu_class ";
+
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echoRed('no result');
+    } else {
+    	echo '<select name="pro_id" required  id="course_list">';
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){		
+			echo "<option value='".$row['pro_id']."'>" 			
+			. $row['stu_grade']."-"
+			. $row['stu_major']."-"
+			. $row['stu_class']
+			. "</option>";
+		}
+	}
+
+	echo '</select>';
+}
+
 
 
 
@@ -166,7 +229,7 @@ function php_self(){
 function dynamicCssJsLib(){
 	$php_self=php_self();
 
-	if ($php_self == 'add_result.php' || $php_self == 'show_at.php' ){
+	if ($php_self == 'add_result.php' || $php_self == 'show_at.php' || $php_self == 'show_static.php'){
 		// echo '
 		// <link rel="stylesheet" href="css/bootstrap-datepicker3.min.css">
 		// <script src="js/bootstrap-datepicker.min.js"></script>
@@ -207,6 +270,9 @@ function addNewAt($pro_id){
 	getProDetail($pro_id,$course_id,$year,$term,$stu_grade,$stu_major,$last_update);
 	$course_name=getCourseName($course_id);
 	$i=0;
+	$no_sum_max=getOneResultByOneQuery("SELECT hour/2 from project where pro_id = '$pro_id'");
+	$no_sum_max=intval($no_sum_max);
+	//noise($no_sum_max);
 	
 	$sql="SELECT * from attend where pro_id= '$pro_id'";
 	$result = $db->query($sql);
@@ -222,7 +288,7 @@ function addNewAt($pro_id){
 		echo '<p>您选择的课程为：'.s($year).'学年'.s($term).'学期'.s($course_name).'课,年级为'
 		.s($stu_grade).'，专业为'.s($stu_major).'，最后更新日期为'.s($last_update).'：</p>';
 
-		echo '<table class="table-bordered">';
+		echo '<table class="table-bordered table table-nonfluid">';
 			echo '<tr>';
 				echo '<th>';
 				echo '学号';
@@ -252,7 +318,7 @@ function addNewAt($pro_id){
 			
 				echo '<td>';
 				echo '<input type="number" name="no_sum'.$i.'" value="'.$row['no_sum'].'"
-				min="'.$row['no_sum'].'" required>';
+				min="'.$row['no_sum'].'" max="'.$no_sum_max.'" required class="form-control0">';
 				echo '</td>';
 
 
@@ -527,7 +593,7 @@ function showMenuAccordUserRole(){
 	$user_role=$_SESSION['user_role'];
 
 	if ($user_role == 'admin') {
-		$array_menu=array('index','manage_stu','manage_tea','manage_course','manage_pro');
+		$array_menu=array('index','manage_stu','manage_tea','manage_course','manage_pro','show_static');
 	}elseif($user_role == 'teacher'){
 		$array_menu=array('index','manage_pro');
 	}
@@ -605,7 +671,7 @@ function showPro($sql,$status= 'on'){
 		if ($status == 'on') {
 			echoRed('未设置考勤课程，请添加！');
 			echo '<a href="'.php_self().'?op=add'.'" class="" >'.lang('add_new_pro').'</a>';
-			die();
+			//die();
 		}elseif ($status == 'off') {
 			echoRed('目前没有课程结课！');
 		}
@@ -643,7 +709,7 @@ function showPro($sql,$status= 'on'){
 				echo '&nbsp;';
 
 				echo '<a href="'.$php_self.'?op=off_pro&'.'pro_id'.'='.$row['pro_id'].'" onclick="';
-				echo "return confirm('您确定结束此课程? \\n这将保存此课程的考勤记录，并且将此课程从考勤列表中删除！');";
+				echo "return confirm('您确定结束此课程? \\n这将保存此课程的考勤记录，并且将此课程移动到结课列表中！');";
 				echo '">'.lang('save_pro').'</a>';
 				echo '&nbsp;';
 
@@ -689,16 +755,26 @@ if ($no_op_run == 0) {
 global $db;
 $php_self=php_self();
 
+
 echoButtonOutGrid($table_name,$no_out_button,1);
-echo "<table class='table-bordered table'>";
-echoTableHead($table_name,$sql,!$no_op_col);
+
 
 $result = $db->query($sql);
 if ($result->num_rows == 0) {
 
 		echoRed('No result!');
 	
-} else {		
+} else {	
+echo '
+<div class="panel panel-default">
+	<div class="panel-heading"> 
+		<h3 class="panel-title">'.lang($table_name).'</h3> 
+		<a href="'.php_self().'?op=add'.'" class="panel-title pull-right" >'.lang('add').'</a>
+	</div> 
+	
+	';
+echo "<table class='table-bordered table'>";
+echoTableHead($table_name,$sql,!$no_op_col);	
 	while($row = $result->fetch_array(MYSQLI_ASSOC)){
 
 		echo "<tr>";
@@ -743,7 +819,7 @@ if ($result->num_rows == 0) {
 	}
 }
 
-echo '</table>';
+echo '</table></div>';
 echoButtonOutGrid($table_name,$no_out_button);
 
 
@@ -817,6 +893,9 @@ if (isset($_GET['op'])) {
 
 function offPro($pro_id){
 	$php_self=php_self();
+	$no_stu_mes=red('所选课程中没有添加学生，无法结课！<br><a href="'.php_self().'">返回</a>');
+	isProHasStudent($pro_id)?:die($no_stu_mes);
+
 	updateOne("UPDATE project SET status = 'off' where pro_id = '".$pro_id."'",1);
 	echoGreen('结课成功！',1);
 	echoLink($php_self,'返回');
@@ -1113,7 +1192,11 @@ function insertEntry($table_name){
 	$col_name_str='';
 	$val_name_str='';
 
-	dev_dump($_POST);
+	dev_dump($_POST,'post');
+
+	
+	$redirect="<script>window.location.href ='index.php' </script>";
+	empty($_POST)?die('page timeout'.$redirect):'';
 
 	if ($table_name == 'project') {		
 		checkProUnique($_POST['entry']);
@@ -1133,11 +1216,6 @@ function insertEntry($table_name){
 		$array_entry=array_merge($array_entry, $array_entry_add);
 	}
 	dev_dump($array_entry,'array_entry');
-	foreach($array_entry as $a=>$b) {
-		if (empty($b)) {
-			die('entry has empty value');
-		}
-	}
 
 	$i=0;
 	foreach($array_entry as $x=>$x_value) {
@@ -1317,6 +1395,11 @@ function inputNewPro($table_name,$user_role=NULL){
 	global $db;
 	$php_self=php_self();
 	$array_json=getArrayFromJsonFile();
+	$this_year=date("Y")+0;
+	$next_year=date("Y")+1;
+	//$array_year= array(0 =>('$this_year' =>$this_year,) , );
+	dev_dump($array_year);
+
 
 	echo '<span>添加考勤课程：</span>';
 	echo '<form method="post" action="'.$php_self.'?op=insert">';	
@@ -1340,15 +1423,15 @@ function inputNewPro($table_name,$user_role=NULL){
 
 			echo '<td>';
 			echo '
-			<select name="entry[year]">
-				<option>2016-2017</option>
+			<select name="entry[year]" class="form-control">
+				<option>'.$this_year.'-'.$next_year.'</option>
 			</select>
 			';	
 			echo '</td>';
 
 			echo '<td>';
 			echo '
-			<select name="entry[term]">
+			<select name="entry[term]" class="form-control">
 				<option>1</option>
 				<option>2</option>
 			</select>
@@ -1356,7 +1439,7 @@ function inputNewPro($table_name,$user_role=NULL){
 			echo '</td>';
 
 			echo '<td>';
-			echo '<select name="entry[hour]">';			
+			echo '<select name="entry[hour]" class="form-control">';			
 			foreach ($array_json['course_hour'] as $key => $value) {
 				echo '<option>'.$value.'</option>';
 			}
@@ -1695,7 +1778,7 @@ function showAttendTable($pro_id){
 		echo '(最后更新时间'.s($last_update).')：</div>';
 
 		showProStatic($pro_id);
-		echo '<table class="table-bordered" id="tablesort">';
+		echo '<table class="table-bordered table table-nonfluid" id="tablesort">';
 
 		echo '<thead><tr>';
 		echo '<th>';
@@ -1835,8 +1918,13 @@ function delStudentFromCourse($pro_id,$stu_array){
 }
 
 
-function addStudentToCourse($pro_id,$stu_array){
-	foreach ($stu_array as $key => $value) {			
+function addStudentToCourse($pro_id,$array_stu){
+	dev_dump($array_stu,'array_stu');
+	if (empty($array_stu)) {
+		echo '<div class="alert alert-danger" role="alert">你没有选择学生!</div>';
+		die();
+	}
+	foreach ($array_stu as $key => $value) {			
 		if (isStudentAddedToCourse($pro_id,$value)) {				
 		}else{
 			$stu_id = $value;
@@ -1921,9 +2009,9 @@ function makeFormForAddStudent($pro_id,$condition=NULL){
 function makeFormForDelStudent($pro_id){
 	global $db;
 
-	echo '<p>已添加到此课程的学生：</p>';
+	//echo '<p>已添加到此课程的学生：</p>';
 	echo '<form id="del_form">';
-	echo '<table class="table-bordered">';
+	echo '<table class="table-bordered ">';
 	$sql="SELECT * FROM attend where pro_id= '$pro_id' ";
 	$result = $db->query($sql) or die($db->error);
 	if ($result->num_rows == 0) {
@@ -2381,9 +2469,9 @@ function dev_dump($var,$var_name=''){
 	if(DEV_MODE == 0){
 		return ;
 	}
-	echo '<button class="btn btn-primary" type="button" data-toggle="collapse" data-target="#collapse_dev_dump_'.$var_name.'" aria-expanded="false" aria-controls="collapse_dev_dump_'.$var_name.'">Show '.__FUNCTION__.'('.$var_name.')</button>';
+	echo '<button class="" type="button" data-toggle="collapse" data-target="#collapse_dev_dump_'.$var_name.'" aria-expanded="false" aria-controls="collapse_dev_dump_'.$var_name.'"><span>  >>>>>>>> '.__FUNCTION__.'('.$var_name.')</button>';
 
-	echo '<div class="collapse" id="collapse_dev_dump_'.$var_name.'"><span>  >>>>>>>> '.__FUNCTION__.'('.$var_name.')';
+	echo '<div class="collapse dev_dump_div" id="collapse_dev_dump_'.$var_name.'">';
 	echo '<pre>' . var_export($var, true) . '</pre>';
 	echo ' <<<<<<<<< '.__FUNCTION__.'('.$var_name.')</span></div>';
 	echo "";

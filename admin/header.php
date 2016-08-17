@@ -21,6 +21,7 @@ require_once("auth.php");
 	$(document).ready(function() { 
 		//$('.noise_div').collapse('hide');
 		$('.noise_div').collapse('show');
+		$('.dev_dump_div').collapse('show');
 	});
 </script>
 
@@ -36,12 +37,12 @@ require_once("auth.php");
 				<span class="icon-bar"></span>
 				<span class="icon-bar"></span>
 			</button>
-			<a class="navbar-brand" href="#">CDTF考勤录入系统</a>
+			<a class="navbar-brand" href="index.php">CDTF考勤录入系统</a>
 		</div>
 
 		<div id="navbar" class="navbar-collapse collapse">
 			<ul class="nav navbar-nav navbar-right" >
-				<li><a href="#"><?php echo $_SESSION['user_role']; ?></a></li>
+				<!-- <li><a href="#"><?php echo $_SESSION['user_role']; ?></a></li> -->
 				<li><a href="#"><?php echo $_SESSION['user_name']; ?></a></li>
 				<li><a href="login.php?logout">退出</a></li>
 			</ul>
@@ -53,7 +54,7 @@ require_once("auth.php");
 <div class="sidebar-collapse collapse navbar-inverse" id="sidebar_collapse" >
 	<ul class="nav navbar-nav "  >
 		<?php showMenuAccordUserRole(); ?>
-		<li><a href="#"><?php echo $_SESSION['user_role']; ?></a></li>
+		<!-- <li><a href="#"><?php echo $_SESSION['user_role']; ?></a></li> -->
 		<li><a href="#"><?php echo $_SESSION['user_name']; ?></a></li>
 		<li><a href="login.php?logout">退出</a></li>		
 	</ul>

@@ -51,17 +51,8 @@ $( document ).ready(function() {
 <?php
 // first load, show all student
 echo '<div id="stu_div">';
-echo '
-<div class="panel panel-default">
-	<div class="panel-heading"> 
-		<h3 class="panel-title">全部学生</h3> 
-		<a href="'.php_self().'?op=add'.'" class="panel-title pull-right" >'.lang('add_new_stu').'</a>
-	</div> 
-	
-	';
-
 showGrid('student','SELECT * from student','stu_id',0,0,1);
-echo '</div></div>';
+echo '</div>';
 ?>
 
 <script type="text/javascript">

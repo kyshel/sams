@@ -2,54 +2,61 @@
 require_once("header.php");
 $pro_id=isset($_GET['pro_id']) ? $_GET['pro_id'] : die(' pro_id is not set');
 
-echo '<a href="manage_pro.php" >完成</a>';
+echo '';
 getProDetail($pro_id,$course_id,$year,$term,$stu_grade,$stu_major,$last_update);
 $course_name=getCourseName($course_id);
-echo '<br><span>您选择的课程为：'.s($year).'学年，'.s($term).'学期，'.s($course_name).'，年级为'.s($stu_grade).'，专业为'.s($stu_major).'</span>';
+echo '<div class="well">您选择的课程为：'.s($year).'学年，'.s($term).'学期，'.s($course_name).'，年级为'.s($stu_grade).'，专业为'.s($stu_major).'<a href="manage_pro.php" class="pull-right" >完成</a></div>';
 ?>
 
 <style type="text/css">
-	#right_div,#filter_div{
-		border-style: solid;
-		border-color: #eee;
-		width:500px;
-	}
-	/* td ceiling*/
-	td{
-		vertical-align:top;
-	}
+
 </style>
 
 
-<table>
-	<tr>
-		<td>
-			<div id="filter_div">
 
-				<form id="filter_form">
-					<span>请选择要添加到此课程的学生：</span><br>
+
+<div class="col-md-6">
+	<div id="filter_div" class=" panel panel-default">
+		<div class="panel-heading"> 
+			<h3 class="panel-title">请选择要添加到此课程的学生:</h3> 
+		</div> 
+		<div class="panel-body">
+
+			<form id="filter_form" class="well">
+
 				
-					<span>条件过滤：</span>
-					<?php 
-					makeSelect('condition[stu_dep]','SELECT DISTINCT stu_dep from student ','no_selected',1,'不分学院','all','onchange="filter()"');
-					makeSelect('condition[stu_major]','SELECT DISTINCT stu_major from student ','no_selected',1,'不分专业','all','onchange="filter()"');
-					makeSelect('condition[stu_grade]','SELECT DISTINCT stu_grade from student ','no_selected',1,'不分年级','all','onchange="filter()"');
-					?>
-					<br><span>学号过滤：</span>
-					<input type="number" min='0' name="condition[stu_id]" onkeyup="filter()" placeholder="输入学号过滤">
-					<button type="button" id="filter_button" onclick="filter()" >过滤</button> 
-				</form>
+				<span>条件过滤：</span>
+				<?php 
+				makeSelect('condition[stu_dep]','SELECT DISTINCT stu_dep from student ','no_selected',1,'不分学院','all','onchange="filter()"');
+				makeSelect('condition[stu_major]','SELECT DISTINCT stu_major from student ','no_selected',1,'不分专业','all','onchange="filter()"');
+				makeSelect('condition[stu_grade]','SELECT DISTINCT stu_grade from student ','no_selected',1,'不分年级','all','onchange="filter()"');
+				?>
+				<br><span>学号过滤：</span>
+				<input type="number" min='0' name="condition[stu_id]" onkeyup="filter()" placeholder="输入学号过滤">
+				<button type="button" id="filter_button" onclick="filter()" >过滤</button> 
+			</form>
 
 			
 			<div id="left_div"><?php makeFormForAddStudent($pro_id); ?></div>
+		</div>
 
-			</div>		
-		</td>
-		<td>
-			<div id="right_div"><?php makeFormForDelStudent($pro_id) ?></div>	
-		</td>
-	</tr>
-</table>
+	</div>	
+</div>
+
+
+
+<div class="col-md-6">
+<div class=" panel panel-default" id="right_panel">
+		<div class="panel-heading"> 
+			<h3 class="panel-title">已添加到此课程的学生：</h3> 
+		</div>
+		<div class="panel-body">
+			<div id="right_div" ><?php makeFormForDelStudent($pro_id) ?></div>
+
+		</div>
+	</div>	
+</div>
+
 
 
 
@@ -88,6 +95,7 @@ function add(){
 				success: function(data){
 					$("#left_div").html(data);
 					$('#filter_button').click();
+					$("html,body").animate({scrollTop: $("#right_panel").offset().top}, 500);
 				}
 			});
 		}
@@ -118,6 +126,7 @@ function del(){
 				success: function(data){
 					$("#left_div").html(data);
 					$('#filter_button').click();
+					$("html,body").animate({scrollTop: $("#right_panel").offset().top}, 500);
 				}
 			});
 		}

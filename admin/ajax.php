@@ -20,6 +20,7 @@ switch ($action) {
 		$pro_id=$_POST['pro_id'];
 		$stu_array=$_POST['stu_id'];
 		addStudentToCourse($pro_id,$stu_array);
+		echoGreen('添加成功!',1);
 		makeFormForDelStudent($pro_id);
 		break;
 
@@ -28,6 +29,7 @@ switch ($action) {
 		$pro_id=$_POST['pro_id'];
 		$stu_array=$_POST['stu_id'];
 		delStudentFromCourse($pro_id,$stu_array);
+		echoGreen('删除成功!',1);
 		makeFormForDelStudent($pro_id);
 		break;
 
@@ -56,14 +58,27 @@ switch ($action) {
 		//echo '<a href="manage_stu.php?op=add">'.lang('add_new_stu').'</a>';
 		break;
 
-	// never use
-	case 'show_all_stu':
-		echo '<span>所有学生：<span><br>';
-		echo '<a href="manage_stu.php?op=add">'.lang('add_new_stu').'</a>';
-		// below func has parameter to receive, not recommend for single show
-		showGrid('student','SELECT * from student','stu_id',0,1);
-		echo '<a href="manage_stu.php?op=add">'.lang('add_new_stu').'</a>';
+	case 'show_static':
+		switch ($_GET['type']) {
+			case 'pro':
+				showAttendTable($_POST['pro_id']);
+				break;
+
+			case 'class':
+				
+				break;
+
+			case 'stu':
+				
+				break;
+			
+			default:
+				# code...
+				break;
+		}		
 		break;
+
+
 	
 	default:
 		echo $action;
