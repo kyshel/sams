@@ -70,3 +70,8 @@ table th.sort-up:after {
 .panel-title{
 	display: inline;
 }
+
+/* form-group&help_block no margin*/
+.stu_input_table {
+
+}

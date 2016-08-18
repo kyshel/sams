@@ -18,7 +18,6 @@ $( document ).ready(function() {
     if (typeof is_set_op != 'object' && is_set_op != 'update' && is_set_op != 'insert' && is_set_op != 'del') {
         $("#filter_div").hide();
     }
-
 });
 
 </script>
@@ -66,6 +65,8 @@ function filter(){
 		success: function(data)
 		{
 			$("#stu_div").html(data);
+			new Tablesort(document.getElementById('tablesort'), {
+			});
 		}
 	}); 
 }

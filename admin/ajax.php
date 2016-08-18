@@ -16,14 +16,14 @@ if ( isset( $_GET['getAddedDate'] ) ) {
 $action=isset($_GET['action']) ? $_GET['action'] : 'action not_set';
 switch ($action) {
 	case 'add_student_to_course':
-		//var_dump($_POST);
+		dev_dump($_POST);
 		$pro_id=$_POST['pro_id'];
-		$stu_array=$_POST['stu_id'];
+		$array_stu=$_POST['stu_id'];
 		if (empty($array_stu)) {
 			echo '<div class="alert alert-danger" role="alert">你没有选择学生!</div>';
 			die();
 		}
-		addStudentToCourse($pro_id,$stu_array);
+		addStudentToCourse($pro_id,$array_stu);
 		echoGreen('添加成功!',1);
 		makeFormForDelStudent($pro_id);
 		break;

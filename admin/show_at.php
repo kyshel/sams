@@ -3,10 +3,6 @@ require_once("header.php");
 ?>
 <script type="text/javascript">	
 	$(document).ready(function() { 
-		new Tablesort(document.getElementById('tablesort'), {	
-			 descending: true
-		});
-
 		document.getElementById('tablesort').addEventListener('afterSort', function() {
 			$('.danger').tooltip('show');
 		});
@@ -14,6 +10,7 @@ require_once("header.php");
 		$('.danger').tooltip('show');
 
 	});
+
 </script>
 
 <?php

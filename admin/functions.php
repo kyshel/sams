@@ -226,19 +226,20 @@ function php_self(){
     return $php_self;
 }
 
+// colding
 function dynamicCssJsLib(){
 	$php_self=php_self();
 
-	if ($php_self == 'add_result.php' || $php_self == 'show_at.php' || $php_self == 'show_static.php'){
-		// echo '
-		// <link rel="stylesheet" href="css/bootstrap-datepicker3.min.css">
-		// <script src="js/bootstrap-datepicker.min.js"></script>
-		// ';
+	// if ($php_self == 'add_result.php' || $php_self == 'show_at.php' || $php_self == 'show_static.php'  ){
+	// 	echo '
+	// 	<link rel="stylesheet" href="css/bootstrap-datepicker3.min.css">
+	// 	<script src="js/bootstrap-datepicker.min.js"></script>
+	// 	';
 		
-		echo '
-		<script language="javascript" type="text/javascript" src="js/tablesort.min.js"></script>
-		'; 
-	}
+	// 	echo '
+	// 	<script language="javascript" type="text/javascript" src="js/tablesort.min.js"></script>
+	// 	'; 
+	// }
 	// elseif($php_self == 'add_main.php' || $php_self == 'manage_go.php'){
 	// 	echo '
 	// 	<link href="css/bootstrap-switch.min.css" rel="stylesheet">
@@ -773,7 +774,7 @@ if ($result->num_rows == 0) {
 			';
 	}
 
-	echo "<table class='table-bordered table'>";
+	echo '<table class="table-bordered table " id="tablesort">';
 	echoTableHead($table_name,$sql,!$no_op_col);	
 	while($row = $result->fetch_array(MYSQLI_ASSOC)){
 
@@ -1148,13 +1149,66 @@ function updateEntry($table_name,$primary_key,$primary_key_value){
 }
 
 
-function inputNewEntry($table_name){
+function inputNewStu($table_name){
 	global $db;
 	$sql="SELECT * from $table_name";
 	$php_self=php_self();
 
 	echo '<form method="post" action="'.$php_self.'?op=insert" role="form" data-toggle="validator">';
-	echo "<table class='table-bordered table'>";
+	echo "<table class='table-bordered table stu_input_table'>";
+
+
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echo "<h1>No Result</h1>";
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+			
+			
+			foreach($row as $x=>$x_value) {
+				echo "<tr>";
+
+					echo "<td>";
+					echo lang($x);
+					echo "</td>" ;
+
+					echo "<td>";
+					makeElementForEntry("entry[$x]");		
+					echo "</td>" ;
+
+				echo "</tr>";
+			}
+				
+
+			// just one line !
+			break;
+		}
+	}
+
+	echo "</table>";
+
+	echo '<div class="form-group"><button type="submit" value="insert" class="btn btn-success">提交</button>';
+	echo '&nbsp;';
+	echo '<a href="'.$php_self.'" class="btn btn-danger" >取消</a></div>';
+
+	echo "</form>";
+
+	die();
+}
+
+
+
+function inputNewEntry($table_name){
+	if ($table_name=='student') {
+		inputNewStu($table_name);
+		return;
+	}
+	global $db;
+	$sql="SELECT * from $table_name";
+	$php_self=php_self();
+
+	echo '<form method="post" action="'.$php_self.'?op=insert" role="form" data-toggle="validator">';
+	echo "<table class='table-bordered table table-nonfluid'>";
 	echoTableHead($table_name,$sql);
 
 	$result = $db->query($sql);
@@ -1181,9 +1235,9 @@ function inputNewEntry($table_name){
 
 	echo "</table>";
 
-	echo '<input type="submit" value="insert">';
+	echo '<div class="form-group "><button type="submit" value="insert" class="btn btn-success">提交</button>';
 	echo '&nbsp;';
-	echo '<a href="'.$php_self.'">cancel</a>';
+	echo '<a href="'.$php_self.'" class="btn btn-danger" >取消</a></div>';
 
 	echo "</form>";
 
@@ -1193,14 +1247,15 @@ function inputNewEntry($table_name){
 function makeElementForEntry($name,$value=''){
 	echo '<div class="form-group has-feedback';
 	$is_input=NULL;
+	$help_block='';
 	//$array_is_input = array('entry[stu_id]' => 1, );
 	//dev_dump($array_is_input,'array_is_input');
 	switch ($name) {
 		case 'entry[stu_id]':
 			$is_input=1;		
 			echo (($is_input==1)?'':'0').'">';
-			$help_block='十位数';
-			$data_error='输入错误！';
+			$help_block='';
+			$data_error='学号应为十位数！';
 			echoInput($name,$value = '','text',1,0,'form-control','maxlength="10" pattern="\d{10}" data-error="'.$data_error.'" ');
 			break;
 
@@ -1211,7 +1266,7 @@ function makeElementForEntry($name,$value=''){
 			$data_error='输入错误！';
 			echoInput($name,$value = '','text',1,0,'form-control','maxlength="20" data-error="'.$data_error.'" ');
 			break;
-			
+
 		case 'entry[stu_sex]':
 			$is_input=0;		
 			echo (($is_input==1)?'':'0').'">';
@@ -1240,11 +1295,23 @@ function makeElementForEntry($name,$value=''){
 			break;
 
 		case 'entry[stu_major]':
-			$is_input=1;		
+			$is_input=0;		
 			echo (($is_input==1)?'':'0').'">';
 			$help_block='';
 			$data_error='输入错误！';
-			echoInput($name,$value = '','text',1,0,'form-control','maxlength="20" data-error="'.$data_error.'" ');
+
+			echo '<select name="'.$name.'" class="form-control">';
+			$array=getArrayFromJsonFile();
+			$array_major=$array['school_major'];
+			foreach ($array_major as $major_code => $major_name) {
+				if (!empty($major_name)) {
+					//noise($key.'-'.$dep_name);
+					makeOption($major_name,$major_name);
+				}				
+			}
+			echo '</select>';
+
+			//echoInput($name,$value = '','text',1,0,'form-control','maxlength="20" data-error="'.$data_error.'" ');
 			break;
 
 		case 'entry[stu_grade]':
@@ -1274,13 +1341,60 @@ function makeElementForEntry($name,$value=''){
 			echo '</select>';
 			break;
 
-		case 'entry[stu_sex]':
-			echo '
-			<select name="entry[stu_sex]" class="form-control">
-				<option value="男">男</option>
-				<option value="女">女</option>
-			</select>
-			';
+		case 'entry[tea_id]':
+			$is_input=1;		
+			echo (($is_input==1)?'':'0').'">';
+			$help_block='';
+			$data_error='输入错误！';
+			echoInput($name,$value = '','text',1,0,'form-control','maxlength="20" data-error="'.$data_error.'" ');
+			break;
+
+		case 'entry[tea_name]':
+			$is_input=1;		
+			echo (($is_input==1)?'':'0').'">';
+			$help_block='';
+			$data_error='输入错误！';
+			echoInput($name,$value = '','text',1,0,'form-control','maxlength="20" data-error="'.$data_error.'" ');
+			break;
+
+		case 'entry[tea_password]':
+			$is_input=1;		
+			echo (($is_input==1)?'':'0').'">';
+			$help_block='';
+			$data_error='输入错误！';
+			echoInput($name,$value = '','text',1,0,'form-control','maxlength="20" data-error="'.$data_error.'" ');
+			break;
+
+		case 'entry[tea_dep]':
+			$is_input=0;		
+			echo (($is_input==1)?'':'0').'">';
+			echo '<select name="'.$name.'" class="form-control">';
+			$array=getArrayFromJsonFile();
+			$array_dep=$array['school_dep'];
+			foreach ($array_dep as $dep_code => $dep_name) {
+				if (!empty($dep_name)) {
+					//noise($key.'-'.$dep_name);
+					makeOption($dep_name,$dep_name);
+				}				
+			}
+			
+			echo '</select>';
+			break;
+
+		case 'entry[course_id]':
+			$is_input=1;		
+			echo (($is_input==1)?'':'0').'">';
+			$help_block='格式：1个大写字母+8个数字';
+			$data_error='格式：1个大写字母+8个数字，例如：A00000001';
+			echoInput($name,$value = '','text',1,0,'form-control','maxlength="9" pattern="[A-Z]{1}\d{8}" data-error="'.$data_error.'" ');
+			break;
+
+		case 'entry[course_name]':
+			$is_input=1;		
+			echo (($is_input==1)?'':'0').'">';
+			$help_block='';
+			$data_error='输入错误！';
+			echoInput($name,$value = '','text',1,0,'form-control','maxlength="20" data-error="'.$data_error.'" ');
 			break;
 
 		
@@ -1289,7 +1403,7 @@ function makeElementForEntry($name,$value=''){
 			//echoInput($name);
 			break;
 	}
-	echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span><div class="help-block with-errors">'.$help_block.'</div></div>';
+	echo '<span class="glyphicon form-control-feedback" aria-hidden="true"></span><span class="help-block with-errors">'.$help_block.'</span></div>';
 }
 
 
@@ -1413,31 +1527,42 @@ function delEntry($table_name,$primary_key,$primary_key_value){
 //			<th> </th>
 function echoTableHead($table_name,$sql,$need_op = 0){
 	global $db;
+	$th_class=NULL;
 
 	$i = 0;
 	$result = $db->query($sql) ;
 	if ($result->num_rows == 0) {
 		if (DEV_MODE == 1) {
-			echoRed("<h5>(dev)Table Head No Result!<h5>");
+			echoRed("(dev)Table Head No Result!");
 		}		
 	} else {		
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){
 			if($i == 0){
-				echo "<tr>";
-				foreach($row as $x=>$x_value) {
-					echo "<th>";
-					//echo $x;
-					dev_echo_col_name($table_name,$x);
+				echo "<thead><tr>";
+				foreach($row as $col_name=>$col_value) {
+
+					$th_class='no-sort';
+					$array_sort_char=array('stu_id','stu_sex','stu_dep','stu_major','stu_grade','stu_class','tea_id','tea_dep','course_id','course_name','','','','','','');
+					foreach ($array_sort_char as $index => $sort_col) {
+						if ($sort_col == $col_name) {
+							$th_class='';
+							break;
+						}
+					}
+					//dev_dump($array_sort_char);
+
+					echo '<th class="'.$th_class.'">';
+					dev_echo_col_name($table_name,$col_name);
 					echo "</th>";
 				}
 				if($need_op == 1){
-					echo "<th>";
+					echo '<th class="no-sort">';
 					// echo "op";
 					dev_echo_col_name('op','op');
 					echo "</th>";
 				}
 					
-				echo "</tr>";			
+				echo "</tr></thead>";			
 			}
 
 			$i=1;
@@ -1893,7 +2018,7 @@ function showAttendTable($pro_id){
 		echo '<table class="table-bordered table table-nonfluid" id="tablesort">';
 
 		echo '<thead><tr>';
-		echo '<th>';
+		echo '<th data-sort-method="">';
 		echo '学号';
 		echo '</th>';
 
@@ -1901,7 +2026,7 @@ function showAttendTable($pro_id){
 		echo '姓名';
 		echo '</th>';
 
-		echo '<th>';
+		echo '<th data-sort-method="number">';
 		echo '旷课次数';
 		echo '</th>';
 		echo '</tr></thead>';

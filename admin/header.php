@@ -15,12 +15,18 @@ require_once("auth.php");
 
 <link rel="stylesheet" href="css/sams.css">
 <link rel="stylesheet" href="css/dashboard.css">
-<?php dynamicCssJsLib(); ?>
+<?php //dynamicCssJsLib(); ?>
 <script src="js/validator.min.js"></script>
+<script src="js/tablesort.min.js"></script>
+<script src="js/tablesort-number.js"></script>
 
 <script type="text/javascript">
 	$(document).ready(function() { 
-		//$('.noise_div').collapse('hide');
+		if (document.getElementById("tablesort")) {
+			new Tablesort(document.getElementById('tablesort'), {
+			});
+		}		
+		
 		$('.noise_div').collapse('show');
 		$('.dev_dump_div').collapse('show');
 	});
