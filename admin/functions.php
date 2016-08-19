@@ -156,7 +156,6 @@ function echoProSelect(){
 
 function echoClassSelect(){
 	global $db;
-	$course_id=NULL;
 	
 	$sql="SELECT * from student 
 	WHERE stu_major IS NOT NULL 
@@ -168,13 +167,19 @@ function echoClassSelect(){
 	if ($result->num_rows == 0) {
 		echoRed('no result');
     } else {
-    	echo '<select name="pro_id" required  id="course_list">';
+    	echo '<select name="str_class"  id="course_list">';
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){		
-			echo "<option value='".$row['pro_id']."'>" 			
-			. $row['stu_grade']."-"
-			. $row['stu_major']."-"
-			. $row['stu_class']
+			echo "<option value='"
+			.$row['stu_major']."-"
+			.$row['stu_grade']."-"
+			.$row['stu_class'].
+			"'>"
+			.$row['stu_major']."-"
+			.$row['stu_grade']."-"
+			.$row['stu_class']
 			. "</option>";
+
+
 		}
 	}
 
@@ -218,6 +223,88 @@ function makeSelectForPro(){
 
 	echo '</select>';
 }
+
+function echoFormForStatic($type){
+echo '<form id="form_'.$type.'" method="post" action="'.php_self().'?type='.$type.'">';
+switch ($type) {
+	case 'class':
+		echo '<span>选择班级:</span><br>';
+		echoClassSelect();
+		break;
+
+	case 'pro':		
+		echo '<span>选择课程:</span><br>';
+		echoProSelect();			
+		break;
+
+	case 'stu':		
+		echo '<span>输入学号:</span><br>';
+		$data_error='';
+		echoInput('stu_id','1423050104','text',1,0,'form-control0','maxlength="10" pattern="\d{10}" data-error="'.$data_error.'" ');	
+		break;
+	
+	default:
+		
+		break;
+}
+echoInput('type',$type,'text',1,1);	
+echo '<button type="submit" name="form_submit">提交</button></form>';
+
+}
+
+function echoStaticByPost($type){
+
+switch ($type) {
+	case 'class':
+		echoStaticClass($_POST['str_class']);
+		break;
+
+	case 'pro':
+		$pro_id=$_POST['pro_id'];
+		echoStaticPro($pro_id);
+		showAttendTable($pro_id);
+		break;
+
+	case 'stu':
+		$stu_id=$_POST['stu_id'];
+		echoStaticStu($stu_id);
+		break;
+	
+	default:
+		
+		break;
+}
+	
+
+
+}
+
+function echoStaticByGet($type){
+switch ($type) {
+	case 'class':
+
+		break;
+
+	case 'pro':
+		$pro_id=$_POST['pro_id'];
+		echoStaticPro($pro_id);
+		showAttendTable($pro_id);
+		break;
+
+	case 'stu':
+		$stu_id=$_GET['stu_id'];
+		echoStaticStu($stu_id);
+		break;
+	
+	default:
+		
+		break;
+}
+	
+
+
+}
+
 
 
 
@@ -780,18 +867,12 @@ if ($result->num_rows == 0) {
 
 		echo "<tr>";
 		foreach($row as $x=>$x_value) {
-			if( ($x == 'course_id') && ($php_self=='set_course.php'||$php_self=='manage_pro.php'||$php_self=='manage_go.php') && $table_name =='project' ){
-				$course_name=getCourseName($x_value);
-				echo "<td>" .$x_value."-".$course_name."</td>" ;
+
+			if( ($x == 'stu_id') ){
+				$td_class=isStuHasPro($x_value)?'class="stu_has_pro"':'';
+				echo '<td '.$td_class.'>'.getLink('show_static.php?static=1&type=stu&stu_id='.$x_value,$x_value,'target="_blank"').'</td>';
 			}
-			else if (($x == 'tea_id') && ($php_self=='set_course.php'||$php_self=='manage_pro.php'||$php_self=='manage_go.php') && $table_name =='project' ) {
-				$tea_name=getTeacherName($x_value);
-				echo "<td>" .$x_value."-".$tea_name."</td>" ;
-			}
-			else if ( ($x == 'stu_id') && ($php_self=='show_at.php') && $table_name =='attend') {
-				
-				
-			}		
+					
 			else{
 				echo "<td>" .$x_value."</td>" ;
 			}
@@ -1541,16 +1622,9 @@ function echoTableHead($table_name,$sql,$need_op = 0){
 				echo "<thead><tr>";
 				foreach($row as $col_name=>$col_value) {
 
-					$th_class='no-sort';
-					$array_sort_char=array('stu_id','stu_sex','stu_dep','stu_major','stu_grade','stu_class','tea_id','tea_dep','course_id','course_name','','','','','','');
-					foreach ($array_sort_char as $index => $sort_col) {
-						if ($sort_col == $col_name) {
-							$th_class='';
-							break;
-						}
-					}
-					//dev_dump($array_sort_char);
-
+				
+	
+					$th_class=getThSortClass($col_name);
 					echo '<th class="'.$th_class.'">';
 					dev_echo_col_name($table_name,$col_name);
 					echo "</th>";
@@ -1569,6 +1643,30 @@ function echoTableHead($table_name,$sql,$need_op = 0){
 		}
 	}
 
+}
+
+function echoThBySql($sql){
+	global $db;
+	$th_class=NULL;
+
+	$result = $db->query($sql) ;
+	if ($result->num_rows == 0) {
+		if (DEV_MODE == 1) {
+			echoRed("(dev)ThBySql No Result!");
+		}		
+	} else {		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+
+			foreach($row as $col_name=>$col_value) {	
+				$th_class=getThSortClass($col_name);
+				echo '<th class="'.$th_class.'">';
+				echo lang($col_name);
+				echo '</th>';
+			}
+
+			break;
+		}
+	}
 }
 
 function editProjectEntry($table_name,$primary_key,$primary_key_value){
@@ -1823,7 +1921,7 @@ function editPro($table_name,$user_role=NULL,$primary_key,$primary_key_value){
 
 
 
-function echoInput($name,$value = '',$type='text',$required = 1,$display_none = 0,$class='',$add_attr){
+function echoInput($name,$value = '',$type='text',$required = 1,$display_none = 0,$class='',$add_attr=''){
 	echo '<input type="'.$type.'" name="'.$name.'" ';
 	if( $value != ''){
 		echo 'value="'.$value.'" ';
@@ -1997,6 +2095,7 @@ function echoSelectList($column,$table_name){
 }
 
 
+
 function showAttendTable($pro_id){
 	global $db;
 
@@ -2014,7 +2113,7 @@ function showAttendTable($pro_id){
 		//echo '<p>(此课程年级为'.s($stu_grade).'，专业为'.s($stu_major).'，最后更新时间为'.s($last_update).')：</p>';
 		echo '(最后更新时间'.s($last_update).')：</div>';
 
-		showProStatic($pro_id);
+		
 		echo '<table class="table-bordered table table-nonfluid" id="tablesort">';
 
 		echo '<thead><tr>';
@@ -2473,6 +2572,10 @@ function echoLink($link,$text){
 	echo '<a href="'.$link.'">'.$text.'</a>';
 }
 
+function getLink($link,$text,$add_attr=''){
+	return '<a href="'.$link.'" '.$add_attr.'>'.$text.'</a>';
+}
+
 
 function getArrayFromJsonFile(){
 
@@ -2587,8 +2690,29 @@ function echoSpan($str,$class){
 	echo '<span class="'.$class.'">'.$str.'</span>';
 }
 
-function showProStatic($pro_id){
-	echo '该班级旷课总人数:';
+
+function echoStaticPro($pro_id){
+
+	$add_student_link='<a href="set_student.php?pro_id='.$pro_id.'">'.lang('add_student').'</a>';
+	echo (isProHasStudent($pro_id)?'':die(echoRed("您课程中没有学生, 请 $add_student_link")));
+
+	$array_pro=getArrayFromEntry('project','pro_id',$pro_id);
+	$year=$array_pro['year'];
+	$term=$array_pro['term'];
+	$course_id=$array_pro['course_id'];
+	$course_name=$array_pro['course_name'];
+	$stu_grade=$array_pro['stu_grade'];
+	$stu_major=$array_pro['stu_major'];
+	$tea_id=$array_pro['tea_id'];
+	$tea_name=$array_pro['tea_name'];
+	$hour=$array_pro['hour'];
+	$last_update=$array_pro['last_update'];
+
+	echo '<div class="well">';
+
+	echo '<div>'.s($year).'学年'.s($term).'学期'.s($course_name).'课的考勤统计如下所示(最后更新时间'.s($last_update).')：</div>';
+
+	echo '该课程旷课总人数:';
 	$a=getOneResultByOneQuery("select count(*) from attend where pro_id = '$pro_id' and no_sum != 0");
 	echo $a;
 
@@ -2608,13 +2732,221 @@ select hour/2/3 from project where pro_id = '$pro_id'
 	$d=getOneResultByOneQuery("select  count(*) from attend where pro_id = '$pro_id' ");
 	echo $d.'%';
 
+	echo '</div>';//well
+
 }
+
+function echoStaticStu($stu_id){
+	global $db;
+	$php_self=php_self();
+
+	$array_stu=getArrayFromEntry('student','stu_id',$stu_id);
+	$tip='该生姓名'.s($array_stu['stu_name']).'，性别'.s($array_stu['stu_sex']).'，年级'.s($array_stu['stu_grade']).'，学院'.s($array_stu['stu_dep']).'，专业'.s($array_stu['stu_major']).'，班级'.s($array_stu['stu_class']);
+	echoDiv($tip,'well');
+
+	if (!isStuHasPro($stu_id)) {
+		echoRed('该生没有考勤课程！');
+		return;
+	}
+		
+
+	$no_count=getOneResultByOneQuery("select sum(no_sum) from attend where stu_id = '$stu_id' ");
+
+	
+	echo '<div class="well">';
+	echo '<p>旷课总次数:'.s($no_count).'</p><p>详细考勤情况：</p>';
+
+	
+	$sql="SELECT pro_id,course_id,course_name,year,term,hour,tea_name from project where pro_id in
+	(SELECT DISTINCT pro_id from attend where stu_id = '$stu_id')
+	";
+	
+
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echoRed('No Result!');
+	} else {
+		echo '<table class="table-bordered table table-nonfluid" id="tablesort">';
+		
+		echo '<thead><tr>';
+		echoThBySql($sql);
+		echo '<th>'.lang('no_sum').'</th>';
+		echo '</tr></thead>';
+
+		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){			
+			echo "<tr>";
+
+				foreach ($row as $col_name => $col_value) {
+					echo "<td>";
+					echo $row[$col_name];
+					echo "</td>" ;					
+				}
+
+				$no_count=getOneResultByOneQuery("select no_sum from attend where stu_id = '$stu_id' and pro_id = ".$row['pro_id']." ");
+				if (isReachCancelExam($row['pro_id'],$stu_id) == 1) {
+					echo '<td class="danger" data-toggle="tooltip" data-placement="right" title="该生已达到取消考试资格！" >';
+				}else{	
+					echo '<td>';
+				}
+				echo $no_count;
+				echo '</td>';
+
+
+			echo "</tr>";
+
+
+		}
+	}
+
+	echo "</table>";
+
+	echo '<div>';
+}
+
+function echoStaticClass($str_class){
+	global $db;
+	//dev_dump($_POST);
+	//echo $str_class;
+	echoDiv('您选择的班级为：'.$str_class.'</p><p>该班级统计如下所示：','well');
+	$array_class=explode('-',$str_class);
+	//dev_dump($array_class);
+	$stu_major=$array_class[0];
+	$stu_grade=$array_class[1];
+	$stu_class=$array_class[2];
+
+	
+
+	$sql="SELECT pro_id,course_id,course_name,year,term,hour,tea_name from project where stu_major='$stu_major' and stu_grade='$stu_grade'";
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echoRed('No Result!');
+	} else {
+		echo '<table class="table-bordered table table-nonfluid" id="tablesort">';
+		
+		echo '<thead><tr>';
+		echoThBySql($sql);
+		echo '<th>'.lang('class_no_count').'</th>';
+		echo '</tr></thead>';
+
+		
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){			
+			echo "<tr>";
+
+				foreach ($row as $col_name => $col_value) {
+					echo "<td>";
+					echo $row[$col_name];
+					echo "</td>" ;					
+				}
+
+				$sql2="
+				SELECT count(*) from attend where no_sum != 0
+				and pro_id = '".$row['pro_id']."'
+				and stu_id IN
+				(SELECT stu_id from student where stu_major='$stu_major' and stu_grade='$stu_grade' and stu_class='$stu_class')
+				";
+				$no_count=getOneResultByOneQuery($sql2);
+				if (isReachCancelExam($row['pro_id'],$stu_id) == 1) {
+					echo '<td class="danger" data-toggle="tooltip" data-placement="right" title="该生已达到取消考试资格！" >';
+				}else{	
+					echo '<td>';
+				}
+				echo $no_count;
+				echo '</td>';
+
+
+			echo "</tr>";
+
+
+		}
+	}
+
+	echo "</table>";
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	die();
+
+	$add_student_link='<a href="set_student.php?pro_id='.$pro_id.'">'.lang('add_student').'</a>';
+	echo (isProHasStudent($pro_id)?'':die(echoRed("您课程中没有学生, 请 $add_student_link")));
+
+	$array_pro=getArrayFromEntry('project','pro_id',$pro_id);
+	$year=$array_pro['year'];
+	$term=$array_pro['term'];
+	$course_id=$array_pro['course_id'];
+	$course_name=$array_pro['course_name'];
+	$stu_grade=$array_pro['stu_grade'];
+	$stu_major=$array_pro['stu_major'];
+	$tea_id=$array_pro['tea_id'];
+	$tea_name=$array_pro['tea_name'];
+	$hour=$array_pro['hour'];
+	$last_update=$array_pro['last_update'];
+
+	echo '<div class="well">';
+
+	echo '<div>'.s($year).'学年'.s($term).'学期'.s($course_name).'课的考勤统计如下所示(最后更新时间'.s($last_update).')：</div>';
+
+	echo '该课程旷课总人数:';
+	$a=getOneResultByOneQuery("select count(*) from attend where pro_id = '$pro_id' and no_sum != 0");
+	echo $a;
+
+	echo '<br>旷课总次数:';
+	$b=getOneResultByOneQuery("select sum(no_sum) from attend where pro_id = '$pro_id' ");
+	echo $b;
+
+	echo '<br>取消考试资格人数:';
+	$c=getOneResultByOneQuery("select count(*) from attend where pro_id = '$pro_id' and no_sum >= (
+
+select hour/2/3 from project where pro_id = '$pro_id' 
+
+)");
+	echo $c;
+
+	echo '<br>取消考试资格人数所占比例:';
+	$d=getOneResultByOneQuery("select  count(*) from attend where pro_id = '$pro_id' ");
+	echo $d.'%';
+
+	echo '</div>';//well
+
+}
+
+
+
 
 function isReachCancelExam($pro_id,$stu_id){
 	$a=getOneResultByOneQuery("select count(*) from attend where pro_id = '$pro_id' and stu_id='$stu_id' and no_sum >= (
-
 		select hour/2/3 from project where pro_id = '$pro_id' 
-
 		)");
 
 	//noise($a);
@@ -2628,6 +2960,36 @@ function isReachCancelExam($pro_id,$stu_id){
 	return $reached;
 
 }
+
+function isStuHasPro($stu_id){
+	$c=getOneResultByOneQuery("SELECT count(*) from attend where stu_id='".$stu_id."'");
+	$is=($c == 0)?0:1;
+	return $is;
+}
+
+
+function getThSortClass($col_name){
+	$array=getArrayFromJsonFile();
+	$array_sort=$array['sort_col'];
+	foreach ($array_sort as $index => $sort_col) {
+		if ($sort_col == $col_name) {
+			return '';
+		}
+	}
+	return 'no-sort';
+}
+
+function getThSortMethod($col_name){
+	$array_sort_number=array('no_sum');
+	foreach ($array_sort_number as $index => $sort_col) {
+		if ($sort_col == $col_name) {
+			return 'data-sort-method="number"';
+		}
+	}
+
+	return '';
+}
+
 
 
 

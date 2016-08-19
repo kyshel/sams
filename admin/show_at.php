@@ -28,6 +28,9 @@ if (isset($_POST["pro_id"])) {
 
 if ($pro_id != 'not_set') {
 	echo '<div><a href="manage_pro.php">返回</a></div>';
+
+	//  ***********  core *********************
+	echoStaticPro($pro_id);
 	showAttendTable($pro_id);
 	echo '<a href="manage_pro.php">返回</a>';
 	die();

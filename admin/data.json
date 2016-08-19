@@ -114,6 +114,21 @@
 		"11":""
 	},
 
+	"sort_col":[
+		"stu_id",
+		"stu_sex",
+		"stu_dep",
+		"stu_major",
+		"stu_grade",
+		"stu_class",
+		"tea_id",
+		"tea_dep",
+		"course_id",
+		"course_name",
+		"pro_id",
+		"no_sum",
+		"","","",""],
+
 
 
 	"_comment3": "language",
@@ -143,9 +158,11 @@
 		"term":"学期",
 		"stu_grade":"年级",
 		"stu_major":"专业",
-		"course_id":"课程代码-课程名",
+		"course_id":"课程代码",
+		"course_name":"课程名",
 		"last_update":"点名更新时间",
-		"tea_id":"工号-教师名",
+		"tea_id":"工号",
+		"tea_name":"教师名",
 
 		"add_new_stu": "+添加学生",
 		
@@ -153,12 +170,15 @@
 		"add": "+添加",
 		"set_course":"课程考勤管理",
 
+		"no_sum":"旷课次数",
+
 		"add_at":"考勤录入",
 		"show_at": "考勤结果",
 		"add_student":"添加学生",
 		"set_student":"考勤名单设置",
 		"save_pro":"结课",
 		"del":"删除",
+		"class_no_count":"旷课人数",
 
 		
 

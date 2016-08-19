@@ -1,19 +1,15 @@
 <?php
 require_once("header.php");
 ?>
+<a href="<?php echo php_self();?>?type=pro">课程分析</a>
+<a href="<?php echo php_self();?>?type=class">班级分析</a>
+<a href="<?php echo php_self();?>?type=stu">学生分析</a>
+<?php
+isset($_GET['type'])?echoFormForStatic($_GET['type']):echoFormForStatic('class');
+isset($_POST['type'])?echoStaticByPost($_POST['type']):isset($_GET['static'])?echoStaticByGet($_GET['type']):'';
 
-<?php $type='pro';?>
-<form id="form_<?php echo $type;?>" method="post">
-<span>选择考勤课程:</span>
-<br>
-<?php echoProSelect();?>
-<button type="button" onclick="show_static('<?php echo $type;?>')">提交</button>
-</form>
-<hr>
+?>
 
-
-
-<div id="div_data"></div>
 
 
 
@@ -60,9 +56,7 @@ function getParameterByName(name, url) {
 
 
 	$(document).ready(function() { 
-		new Tablesort(document.getElementById('tablesort'), {	
-			 descending: true
-		});
+
 
 		document.getElementById('tablesort').addEventListener('afterSort', function() {
 			$('.danger').tooltip('show');

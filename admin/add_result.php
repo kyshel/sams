@@ -49,9 +49,7 @@ showAttendTable($pro_id);
 
 <script type="text/javascript">	
 	$(document).ready(function() { 
-		new Tablesort(document.getElementById('tablesort'), {	
-			descending: true
-		});
+
 		document.getElementById('tablesort').addEventListener('afterSort', function() {
 			$('.danger').tooltip('show');
 		});

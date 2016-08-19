@@ -25,7 +25,13 @@ require_once("auth.php");
 		if (document.getElementById("tablesort")) {
 			new Tablesort(document.getElementById('tablesort'), {
 			});
-		}		
+			document.getElementById('tablesort').addEventListener('afterSort', function() {
+				$('.danger').tooltip('show');
+			});
+		}
+
+		//$('.noise_div').collapse('hide');
+		//$('.dev_dump_div').collapse('hide');
 		
 		$('.noise_div').collapse('show');
 		$('.dev_dump_div').collapse('show');
