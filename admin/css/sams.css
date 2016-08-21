@@ -80,3 +80,9 @@ table th.sort-up:after {
 .stu_has_pro {
 	background-color: #DFF0D8;
 }
+
+#static_info_text{
+	/*padding-left: 0px !important; */
+}
+
+

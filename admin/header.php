@@ -12,13 +12,12 @@ require_once("auth.php");
 
 <script src="js/jquery.min.js"></script>
 <script src="js/bootstrap.min.js"></script>
-
 <link rel="stylesheet" href="css/sams.css">
 <link rel="stylesheet" href="css/dashboard.css">
-<?php //dynamicCssJsLib(); ?>
 <script src="js/validator.min.js"></script>
 <script src="js/tablesort.min.js"></script>
 <script src="js/tablesort-number.js"></script>
+<?php dynamicCssJsLib(); ?>
 
 <script type="text/javascript">
 	$(document).ready(function() { 

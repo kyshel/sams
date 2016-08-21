@@ -225,20 +225,21 @@ function makeSelectForPro(){
 }
 
 function echoFormForStatic($type){
+echo '<div class="well0 well-sm0">';
 echo '<form id="form_'.$type.'" method="post" action="'.php_self().'?type='.$type.'">';
 switch ($type) {
 	case 'class':
-		echo '<span>选择班级:</span><br>';
+		echo '<div class="panel-heading0">选择班级:</div>';
 		echoClassSelect();
 		break;
 
 	case 'pro':		
-		echo '<span>选择课程:</span><br>';
+		echo '<div class="panel-heading0">选择课程:</div>';
 		echoProSelect();			
 		break;
 
 	case 'stu':		
-		echo '<span>输入学号:</span><br>';
+		echo '<div class="panel-heading0">输入学号:</div>';
 		$data_error='';
 		echoInput('stu_id','1423050104','text',1,0,'form-control0','maxlength="10" pattern="\d{10}" data-error="'.$data_error.'" ');	
 		break;
@@ -249,20 +250,22 @@ switch ($type) {
 }
 echoInput('type',$type,'text',1,1);	
 echo '<button type="submit" name="form_submit">提交</button></form>';
-
+echo '</div>';//panel
 }
 
 function echoStaticByPost($type){
 
 switch ($type) {
-	case 'class':
-		echoStaticClass($_POST['str_class']);
-		break;
+	
 
 	case 'pro':
 		$pro_id=$_POST['pro_id'];
 		echoStaticPro($pro_id);
 		showAttendTable($pro_id);
+		break;
+
+	case 'class':
+		echoStaticClass($_POST['str_class']);
 		break;
 
 	case 'stu':
@@ -317,22 +320,12 @@ function php_self(){
 function dynamicCssJsLib(){
 	$php_self=php_self();
 
-	// if ($php_self == 'add_result.php' || $php_self == 'show_at.php' || $php_self == 'show_static.php'  ){
-	// 	echo '
-	// 	<link rel="stylesheet" href="css/bootstrap-datepicker3.min.css">
-	// 	<script src="js/bootstrap-datepicker.min.js"></script>
-	// 	';
-		
-	// 	echo '
-	// 	<script language="javascript" type="text/javascript" src="js/tablesort.min.js"></script>
-	// 	'; 
-	// }
-	// elseif($php_self == 'add_main.php' || $php_self == 'manage_go.php'){
-	// 	echo '
-	// 	<link href="css/bootstrap-switch.min.css" rel="stylesheet">
-	// 	<script src="js/bootstrap-switch.min.js"></script>
-	// 	'; 
-	// }
+	if ($php_self == 'show_static.php'  ){
+		echo '
+		<script src="js/d3.v4.min.js"></script>
+		'; 
+	}
+
 
 }
 
@@ -2109,11 +2102,12 @@ function showAttendTable($pro_id){
 
 		getProDetail($pro_id,$course_id,$year,$term,$stu_grade,$stu_major,$last_update);
 		$course_name=getCourseName($course_id);
-		echo '<div>'.s($year).'学年'.s($term).'学期'.s($course_name).'课的点名情况如下所示';
+		echo '<div class="panel panel-default">';
+		echo '<div class="panel-heading"><h3 class="panel-title">'.s($year).'学年'.s($term).'学期'.s($course_name).'课的点名情况如下所示';
 		//echo '<p>(此课程年级为'.s($stu_grade).'，专业为'.s($stu_major).'，最后更新时间为'.s($last_update).')：</p>';
-		echo '(最后更新时间'.s($last_update).')：</div>';
+		echo '(最后更新时间'.s($last_update).')：</h3></div>';
 
-		
+		echo '<div class="panel panel-body">';
 		echo '<table class="table-bordered table table-nonfluid" id="tablesort">';
 
 		echo '<thead><tr>';
@@ -2161,6 +2155,8 @@ function showAttendTable($pro_id){
 
 		}
 		echo '</table>';
+		echo '</div>';//panel-body
+		echo '</div>';//panel
 	}
 	
 }
@@ -2708,10 +2704,22 @@ function echoStaticPro($pro_id){
 	$hour=$array_pro['hour'];
 	$last_update=$array_pro['last_update'];
 
-	echo '<div class="well">';
+	
 
-	echo '<div>'.s($year).'学年'.s($term).'学期'.s($course_name).'课的考勤统计如下所示(最后更新时间'.s($last_update).')：</div>';
+	$tip=s($year).'学年'.s($term).'学期'.s($course_name).'课的考勤统计如下所示(最后更新时间'.s($last_update).')：';
 
+	echo '
+	
+		<div id="static_info" class="panel panel-default " >
+			<div class="panel-heading"> 
+				<h3 class="panel-title">'.$tip.'</h3> 
+				
+			</div>
+			<div class="panel-body">
+			<div class="0col-md-12"> ';
+
+
+	echo '<div id="static_info_text" class="col-md-6" >';
 	echo '该课程旷课总人数:';
 	$a=getOneResultByOneQuery("select count(*) from attend where pro_id = '$pro_id' and no_sum != 0");
 	echo $a;
@@ -2722,17 +2730,31 @@ function echoStaticPro($pro_id){
 
 	echo '<br>取消考试资格人数:';
 	$c=getOneResultByOneQuery("select count(*) from attend where pro_id = '$pro_id' and no_sum >= (
-
 select hour/2/3 from project where pro_id = '$pro_id' 
-
 )");
 	echo $c;
 
 	echo '<br>取消考试资格人数所占比例:';
 	$d=getOneResultByOneQuery("select  count(*) from attend where pro_id = '$pro_id' ");
-	echo $d.'%';
+	global $cacel_exam_ratio;
+	$cacel_exam_ratio=intval($c)/intval($d);
+	$cacel_exam_ratio = number_format($cacel_exam_ratio, 3);// 3 decimal points
+	echo ($cacel_exam_ratio*100).'%';
+	echo '</div>';
 
-	echo '</div>';//well
+	// chart
+	echo '
+	<div id="static_info_chart" class="col-md-6" >
+		<div id="div_canvas" class="pull-right">
+			<canvas id="cancel_exam_pie" height="300" width="300" ></canvas>
+		</div>
+	</div>';
+
+	echo '</div>';//col-md-12
+	echo '</div>';//panel-body
+	echo '</div>';//static info
+
+	
 
 }
 
