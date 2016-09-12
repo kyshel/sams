@@ -25,7 +25,9 @@ require_once("header.php");
 	</div> 
 	<div class="panel-body" >
 	<p>
-		开发总计时长：25天*8h/天≈200小时<br><br>
+		
+
+		160911 增加班级过滤<br><br>
 
 		160819 增加个人分析<br>
 		160818 完成字段验证<br>
@@ -60,7 +62,9 @@ require_once("header.php");
 	</div> 
 </div>
 
-<div class="panel panel-primary"> 
+
+
+<!-- <div class="panel panel-primary"> 
 	<div class="panel-heading"> 
 		<h3 class="panel-title">测试中</h3> 
 	</div> 
@@ -71,7 +75,7 @@ require_once("header.php");
 
 
 	</div> 
-</div>
+</div> -->
 
 
 

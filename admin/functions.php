@@ -676,7 +676,9 @@ function showMenuAccordUserRole(){
 	if ($user_role == 'admin') {
 		$array_menu=array('index','manage_stu','manage_tea','manage_course','manage_pro','show_static');
 	}elseif($user_role == 'teacher'){
-		$array_menu=array('index','manage_pro');
+		$array_menu=array('index','manage_pro','set_password');
+	}elseif($user_role == 'tea_first'){
+		$array_menu=array('set_password');
 	}
 
 	// echo menu
@@ -2279,14 +2281,16 @@ function buildFilterStuSql($condition){
 	$dep=isset($condition['stu_dep'])?$condition['stu_dep']:'all';
 	$major=isset($condition['stu_major'])?$condition['stu_major']:'all';
 	$grade=isset($condition['stu_grade'])?$condition['stu_grade']:'all';
+	$class=isset($condition['stu_class'])?$condition['stu_class']:'all';
 	$id=isset($condition['stu_id'])?$condition['stu_id']:'';
 
 	$stu_dep_con=isEqual($dep,'all')?'':" and stu_dep='".$dep."'";
 	$stu_major_con=isEqual($major,'all')?'':" and stu_major='".$major."'";
 	$stu_grade_con=isEqual($grade,'all')?'':" and stu_grade='".$grade."'";
+	$stu_class_con=isEqual($class,'all')?'':" and stu_class='".$class."'";
 	$stu_id_con=" and stu_id LIKE '%".$id."%'";
 
-	$sql="SELECT * FROM student WHERE 1 ".$stu_dep_con.$stu_major_con.$stu_grade_con.$stu_id_con;
+	$sql="SELECT * FROM student WHERE 1 ".$stu_dep_con.$stu_major_con.$stu_grade_con.$stu_id_con.$stu_class_con;
 	
 	noise($sql);
 
@@ -2543,9 +2547,9 @@ function s($str){
 
 function echoRed($str,$is_block = 0){
 	if ($is_block == 0) {
-		echo '<span style="color:red;">'.$str.'</span>';
+		echo '<span style="color:red;" class="alert0 alert-danger0">'.$str.'</span>';
 	}elseif ($is_block == 1) {
-		echo '<div style="color:red;">'.$str.'</div>';
+		echo '<div style="color:red;" class="alert0 alert-danger0">'.$str.'</div>';
 	}
 }
 
@@ -3013,7 +3017,25 @@ function getThSortMethod($col_name){
 }
 
 
+function addLog($action){
+	//global $_SERVER['REMOTE_ADDR'];
+	//global $_SERVER['HTTP_X_FORWARDED_FOR'];
 
+	global $db;
+	$log_time=date("Y-m-d  H:i:s");
+	$user_name=$_SESSION['user_name'];
+	$user_agent=$_SERVER['HTTP_USER_AGENT'];
+	if(isset($_SERVER['HTTP_X_FORWARDED_FOR'])){
+		$ipa=$_SERVER['REMOTE_ADDR'];
+		$ipb=$_SERVER['HTTP_X_FORWARDED_FOR'];
+		$sql_log="INSERT INTO log(log_time,user_name,action,ipa,ipb,user_agent) VALUES ('$log_time','$user_name','$action','$ipa','$ipb','$user_agent')";
+	}else{
+		$ipa=$_SERVER['REMOTE_ADDR'];
+		$sql_log="INSERT INTO log(log_time,user_name,action,ipa,user_agent) VALUES ('$log_time','$user_name','$action','$ipa','$user_agent')";
+	}
+
+	$db->query($sql_log) or die($db->error);
+}
 
 
 

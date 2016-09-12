@@ -2,16 +2,13 @@
 require_once("header.php");
 ?>
 
-
-
 <?php
+
+// define sql,message
 $message='';
-
-
 $status=( (isset($_GET['op'])?$_GET['op']:'') == 'show_off_pro')?'off':'on';
 noise($status,'status');
 $add_col=($status == 'off')?',off_time':'';
-
 $user_role=$_SESSION['user_role'];
 if ($user_role=='admin') {
 	$sql="SELECT pro_id,course_id,course_name,year,term,hour,stu_grade,stu_major,tea_id,tea_name".$add_col." from project 
@@ -27,10 +24,11 @@ if ($user_role=='admin') {
 }
 
 
+// show
 showPro($sql,$status);
 
 
-
+// display off_link , message
 if ($status== 'on' && isAnyProOff() ) {
 	echo '<br><br>';
 	echo '<a href="'.php_self().'?op=show_off_pro'.'">'.lang('show_off_pro').'</a>';

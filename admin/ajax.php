@@ -21,10 +21,11 @@ switch ($action) {
 		$array_stu=$_POST['stu_id'];
 		if (empty($array_stu)) {
 			echo '<div class="alert alert-danger" role="alert">你没有选择学生!</div>';
-			die();
-		}
-		addStudentToCourse($pro_id,$array_stu);
-		echoGreen('添加成功!',1);
+			//die();
+		}else{
+			addStudentToCourse($pro_id,$array_stu);
+			echoGreen('添加成功!',1);
+		}	
 		makeFormForDelStudent($pro_id);
 		break;
 
@@ -46,6 +47,15 @@ switch ($action) {
 		$pro_id=$_GET['pro_id'];
 		//var_dump($_POST);
 		$condition_array=$_POST['condition'];
+
+		foreach ($condition_array as $key => $value) {
+			if (!empty($value)) {
+				echo '&nbsp;&nbsp;';
+				$key_name=lang($key);
+				echoSpan($key_name.':'.$value,'label label-warning panel-title0');
+			}			
+		}
+		echo '<br>';
 		makeFormForAddStudent($pro_id,$condition_array);
 		break;
 

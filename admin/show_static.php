@@ -12,6 +12,7 @@ $array_menu=array(
 	'stu' => '学生分析',
 	);
 
+// default active card
 $active_type=isset($_GET['type'])?$_GET['type']:'pro';
 foreach ($array_menu as $key => $value) {	
 	$is_active=($key == $active_type)?'class="active"':'';
@@ -26,7 +27,8 @@ foreach ($array_menu as $key => $value) {
 isset($_GET['type'])?echoFormForStatic($_GET['type']):echoFormForStatic('pro');
 isset($_POST['type'])?echoStaticByPost($_POST['type']):isset($_GET['static'])?echoStaticByGet($_GET['type']):'';
 ?>
-<!-- ****************** canvas ************ -->
+
+<!-- ****************** canvas data make ************ -->
 <script type="text/javascript">	
 var data=<?php
 $type=isset($_POST['type'])?$_POST['type']:(isset($_GET['static'])?$_GET['type']:'');

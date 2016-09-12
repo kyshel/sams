@@ -33,6 +33,7 @@ $( document ).ready(function() {
 			makeSelect('condition[stu_dep]','SELECT DISTINCT stu_dep from student ','no_selected',1,'不分学院','all','onchange="filter()"');
 			makeSelect('condition[stu_major]','SELECT DISTINCT stu_major from student ','no_selected',1,'不分专业','all','onchange="filter()"');
 			makeSelect('condition[stu_grade]','SELECT DISTINCT stu_grade from student ','no_selected',1,'不分年级','all','onchange="filter()"');
+			makeSelect('condition[stu_class]','SELECT DISTINCT stu_class from student ','no_selected',1,'不分班级','all','onchange="filter()"');
 			?>
 			<input type="number" class="form-control " min='0' name="condition[stu_id]" onkeyup="filter()" placeholder="输入学号过滤">
 			</div>

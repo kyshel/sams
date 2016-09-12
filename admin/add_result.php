@@ -35,15 +35,30 @@ for($j=0;$j<$stu_sum;$j++){
 
 	$db->query($sql) or die($db->error);	
 }
+
 ?>
 
 
 
-<a href="index.php">完成</a>
+
 <?php
 // show result
-echoGreen('提交成功！',1);
+echoGreen('提交成功！<a href="index.php" class="pull-right">完成</a> ',1);
 showAttendTable($pro_id);
+
+	$array_pro=getArrayFromEntry('project','pro_id',$pro_id);
+	$year=$array_pro['year'];
+	$term=$array_pro['term'];
+	$course_id=$array_pro['course_id'];
+	$course_name=$array_pro['course_name'];
+	//$stu_grade=$array_pro['stu_grade'];
+	//$stu_major=$array_pro['stu_major'];
+	//$tea_id=$array_pro['tea_id'];
+	//$tea_name=$array_pro['tea_name'];
+
+$action='更新考勤记录,记录号: '.$pro_id.','.$year.'学年,'.$term.'学期,'.$course_name;
+addLog($action);
+
 ?>
 <a href="index.php">完成</a>
 

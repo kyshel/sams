@@ -26,11 +26,14 @@ echo '<div class="well">您选择的课程为：'.s($year).'学年，'.s($term).
 
 				
 				<span>条件过滤：</span>
+
 				<?php 
 				makeSelect('condition[stu_dep]','SELECT DISTINCT stu_dep from student ','no_selected',1,'不分学院','all','onchange="filter()"');
 				makeSelect('condition[stu_major]','SELECT DISTINCT stu_major from student ','no_selected',1,'不分专业','all','onchange="filter()"');
 				makeSelect('condition[stu_grade]','SELECT DISTINCT stu_grade from student ','no_selected',1,'不分年级','all','onchange="filter()"');
+				makeSelect('condition[stu_class]','SELECT DISTINCT stu_class from student ','no_selected',1,'不分班级','all','onchange="filter()"');
 				?>
+
 				<br><span>学号过滤：</span>
 				<input type="number" min='0' name="condition[stu_id]" onkeyup="filter()" placeholder="输入学号过滤">
 				<button type="button" id="filter_button" onclick="filter()" >过滤</button> 
@@ -81,6 +84,7 @@ function filter(){
 
 
 function add(){
+	
 	var pro_id = getParameterByName('pro_id');
 	var url = "ajax.php?action=add_student_to_course&sid="+Math.random(); 
 	$.ajax({

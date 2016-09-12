@@ -112,6 +112,17 @@ class Login
                 //******* teacher verify *****
                 } elseif ($result_of_login_check2->num_rows == 1) {
 
+                    $sql4 = "SELECT tea_lock
+                    FROM teacher
+                    WHERE tea_name = '" . $user_name . "';";
+                    //var_dump($sql4);
+                    $result4 = $this->db_connection->query($sql4);
+                    $row4 = $result4->fetch_object();
+
+                    if ($row4->tea_lock=='1') {
+                        die('<h1>此账户暂停使用</h1><a href="index.php">返回</a>');
+                    }
+
                     // get result row (as an object)
                     $result_row = $result_of_login_check2->fetch_object();
 
@@ -119,12 +130,29 @@ class Login
                     // the hash of that user's password
                     if ( $_POST['user_password'] == $result_row->tea_password ) {
 
+                        $sql3 = "SELECT tea_active
+                        FROM teacher
+                        WHERE tea_name = '" . $user_name . "';";
+                        $result3 = $this->db_connection->query($sql3);
+                        $row3 = $result3->fetch_object();
+
+                        if ($row3->tea_active=='0') {
+                            $_SESSION['tea_id'] = $result_row->tea_id;
+                            $_SESSION['user_name'] = $result_row->tea_name;
+                            $_SESSION['user_role'] = 'tea_first';
+                            $_SESSION['user_login_status'] = 1;
+
+                            $_SESSION['tea_active'] = 0;
+                            header("Location:set_password.php");
+
+                            die();
+                        }
+
                         // write user data into PHP SESSION (a file on your server)
+                        $_SESSION['tea_id'] = $result_row->tea_id;
                         $_SESSION['user_name'] = $result_row->tea_name;
                         $_SESSION['user_role'] = 'teacher';
                         $_SESSION['user_login_status'] = 1;
-
-                        $_SESSION['tea_id'] = $result_row->tea_id;
 
                         //log add
                         //$action="登录系统";
