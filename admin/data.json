@@ -133,6 +133,7 @@
 		"course_name":"课程名",
 		"last_update":"点名更新时间",
 		"tea_id":"工号",
+		"tea_id2":"工号-教师名",
 		"tea_name":"教师名",
 
 		"add_new_stu": "+添加学生",

@@ -495,6 +495,7 @@ function bug_get_go_id($pro_id,$go_time){
 function checkPrimaryKeyUnique($table_name,$pk_name,$pk_value){
 	global $db;
 
+
 	$year=$pro_array['year'];
 	$term=$pro_array['term'];
 	$course_id=$pro_array['course_id'];
@@ -511,7 +512,7 @@ function checkPrimaryKeyUnique($table_name,$pk_name,$pk_value){
 
 		echoRed('该条目已存在！如下所示：',1);				
 		showGrid($table_name,$sql,$pk_name,1,1,1);
-		echo '<a href="set_course.php?op=add">重新添加</a>';
+		echo '<a href="'.php_self().'?op=add">重新添加</a>';
 
 		die();
 		return 0;
@@ -1741,7 +1742,7 @@ function inputNewPro($table_name,$user_role=NULL){
 			echo '<th>'.lang('hour').'</th>';
 			echo '<th>'.lang('stu_grade').'</th>';
 			echo '<th>'.lang('stu_major').'</th>';
-			echo '<th>'.lang('tea_id').'</th>';
+			echo '<th>'.lang('tea_id2').'</th>';
 		echo "</tr>";
 
 		echo "<tr>";
