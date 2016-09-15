@@ -2,10 +2,17 @@
 
 Sams is a Student Attendance Management System.
 
-##Install
-LAMP is recommend.
+##Usage
 
-Unzip to the web directory and open it in the browser.
+###Server-side
+1. `git clone https://github.com/kyshel/sams.git`
+2. `cd sams`
+3. `vim config.php` (change database info)
+4. move sams dir to your web-server dir
+
+###Browser-Side
+1. Open `your.server.address/admin/reg.php` in client browser address bar to register 
+2. Open `your.server.address` to login 
 
 ##License
 [MIT](https://opensource.org/licenses/MIT)
