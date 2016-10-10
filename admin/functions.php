@@ -1458,6 +1458,22 @@ function makeElementForEntry($name,$value=''){
 			echo '</select>';
 			break;
 
+		case 'entry[tea_lock]':
+			$is_input=0;		
+			echo (($is_input==1)?'':'0').'">';
+
+			echoInput($name,$value = '0',$type='text',$required = 1,$display_none = 0,$class='form-control',$add_attr='readonly');
+			break;
+
+		case 'entry[tea_active]':
+			$is_input=0;		
+			echo (($is_input==1)?'':'0').'">';
+
+			echoInput($name,$value = '0',$type='text',$required = 1,$display_none = 0,$class='form-control',$add_attr='readonly');
+			break;
+
+
+		/* course */
 		case 'entry[course_id]':
 			$is_input=1;		
 			echo (($is_input==1)?'':'0').'">';
