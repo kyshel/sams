@@ -26,7 +26,7 @@ if (isset($_POST['set_confirm'])) {
 					if ($tea_active===0) {
 						$_SESSION['user_role'] = 'teacher';
 						$_SESSION['tea_active'] = 1;
-						updateOne("UPDATE teacher SET tea_active = '1' where tea_id=".$tea_id,1);
+						updateOne("UPDATE teacher SET tea_active = '1' where tea_id='".$tea_id."'",1);
 					}
 					die();
 				}else{
