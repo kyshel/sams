@@ -15,7 +15,10 @@ Sams is a Student Attendance Management System.
 2. Open `your.server.address` to login 
 
 ## SQL statements
-see [sams-meta](https://github.com/kyshel/sams-meta)
+See [sams-meta](https://github.com/kyshel/sams-meta)
+
+## Doc
+See [sams-doc](https://github.com/kyshel/sams-doc)
 
 ##License
 [MIT](https://opensource.org/licenses/MIT)
