@@ -14,5 +14,8 @@ Sams is a Student Attendance Management System.
 1. Open `your.server.address/admin/reg.php` in client browser address bar to register 
 2. Open `your.server.address` to login 
 
+## SQL statements
+see [sams-meta](https://github.com/kyshel/sams-meta)
+
 ##License
 [MIT](https://opensource.org/licenses/MIT)
