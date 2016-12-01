@@ -14,10 +14,11 @@ require_once("auth.php");
 <script src="js/bootstrap.min.js"></script>
 <link rel="stylesheet" href="css/sams.css">
 <link rel="stylesheet" href="css/dashboard.css">
+
 <script src="js/validator.min.js"></script>
 <script src="js/tablesort.min.js"></script>
 <script src="js/tablesort-number.js"></script>
-<?php dynamicCssJsLib(); ?>
+<?php echoRequireLib(); ?>
 
 <script type="text/javascript">
 	$(document).ready(function() { 
@@ -85,7 +86,7 @@ require_once("auth.php");
 		
 
 
-		<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main">
+		<div class="col-sm-9 col-sm-offset-3 col-md-10 col-md-offset-2 main"> 
 		
 
 

@@ -317,16 +317,18 @@ function php_self(){
 }
 
 // colding
-function dynamicCssJsLib(){
+function echoRequireLib(){
 	$php_self=php_self();
 
 	if ($php_self == 'show_static.php'  ){
 		echo '
 		<script src="js/d3.v4.min.js"></script>
 		'; 
+	}elseif ($php_self == 'render_static.php' ) {
+		echo '
+		<link href="css/viewer.css" rel="stylesheet">
+		'; 		
 	}
-
-
 }
 
 
@@ -675,7 +677,7 @@ function showMenuAccordUserRole(){
 	$user_role=$_SESSION['user_role'];
 
 	if ($user_role == 'admin') {
-		$array_menu=array('index','manage_stu','manage_tea','manage_course','manage_pro','show_static');
+		$array_menu=array('index','manage_stu','manage_tea','manage_course','manage_pro','show_static','show_result');
 	}elseif($user_role == 'teacher'){
 		$array_menu=array('index','manage_pro','set_password');
 	}elseif($user_role == 'tea_first'){
@@ -3054,6 +3056,105 @@ function addLog($action){
 	$db->query($sql_log) or die($db->error);
 }
 
+// 161129
+// pretty string
+function getPre($str){
+	return '<pre>'.$str.'</pre>';
+}
+
+// 161130
+function getStaticJson(){
+	global $db;
+
+	$project = array();
+	$attend = array();
+	$response = array();
+	$project_meta=array();
+
+
+	$sql="SELECT * from project";
+
+
+	$result = $db->query($sql);
+	if ($result->num_rows == 0) {
+		echo "table project is empty!";
+    } else {
+		while($row = $result->fetch_array(MYSQLI_ASSOC)){
+
+			$pro_id = $row['pro_id'];
+			$sql2 = "SELECT * from attend WHERE pro_id = ".$pro_id;
+			$result2 = $db->query($sql2);
+			if ($result2->num_rows == 0) {
+				echo "table attend is empty!";
+			} else {
+				while($row2 = $result2->fetch_array(MYSQLI_ASSOC)){
+					$attend[] = array(
+						'记录编号' => $row2['at_id'],
+						'学号' => $row2['stu_id'],
+						'姓名' => getStuName($row2['stu_id']),
+						'缺勤次数' => $row2['no_sum']
+					);
+				}
+			}
+
+
+
+			$a=getOneResultByOneQuery("select count(*) from attend where pro_id = '$pro_id' and no_sum != 0");
+
+
+
+			$b=getOneResultByOneQuery("select sum(no_sum) from attend where pro_id = '$pro_id' ");
+
+
+
+			$c=getOneResultByOneQuery("select count(*) from attend where pro_id = '$pro_id' and no_sum >= (
+				select hour/2/3 from project where pro_id = '$pro_id' 
+				)");
+
+			$d=getOneResultByOneQuery("select  count(*) from attend where pro_id = '$pro_id' ");
+
+
+			$project_meta=array(
+				'总人数' => $d,
+				'旷课总人数' => $a, 
+				'旷课总次数' => $b, 
+				'取消考试人数' => $c, 
+				'取消考试比例' => $c/$d
+				);
+
+
+			$project[] = array(
+				'考勤编号' => $row['pro_id'], 
+				'学年' => $row['year'],
+				'学期' => $row['term'],
+				'课程编号' => $row['course_id'],
+				'课程名' => $row['course_name'],
+				'年级' => $row['stu_grade'],
+				'专业' => $row['stu_major'],
+				'工号' => $row['tea_id'],
+				'教师名' => $row['tea_name'],
+				'学时' => $row['hour'],
+				'更新时间' => $row['last_update'],
+				'状态' => $row['status'],
+				'结课时间' => $row['off_time'],
+				'考勤情况'=> $project_meta,
+				'列表' => $attend
+			);
+
+			$attend = array(); // empty attend
+		}
+	}
+
+
+	$response['统计时间'] = getNowTime() ;
+	$response['备注'] = '若旷课次数达到总课时的1/6(一节大课为2个课时)，取消考试资格';
+	$response['数据'] = $project ;
+
+
+	
+	$json_str = json_encode($response, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+	return $json_str;
+}
 
 
 
