@@ -2,6 +2,7 @@
 require_once("auth.php");
 ?>
 
+<!DOCTYPE html>
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -66,7 +67,7 @@ require_once("auth.php");
 
 <div class="sidebar-collapse collapse navbar-inverse" id="sidebar_collapse" >
 	<ul class="nav navbar-nav "  >
-		<?php showMenuAccordUserRole(); ?>
+		<?php showMenuAccordUser(); ?>
 		<!-- <li><a href="#"><?php echo $_SESSION['user_role']; ?></a></li> -->
 		<li><a href="#"><?php echo $_SESSION['user_name']; ?></a></li>
 		<li><a href="login.php?logout">退出</a></li>		
@@ -78,7 +79,7 @@ require_once("auth.php");
 
 		<div class="col-sm-3 col-md-2 sidebar">
 			<ul class="nav nav-sidebar "  >
-				<?php showMenuAccordUserRole(); ?>
+				<?php showMenuAccordUser(); ?>
 				<li><a><?php (DEV_MODE == 1)?echoRed('Debugging!'):'';?></a></li>				
 			</ul>
 		</div>

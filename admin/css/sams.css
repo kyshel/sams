@@ -85,6 +85,20 @@ table th.sort-up:after {
 	/*padding-left: 0px !important; */
 }
 
+/* 161201,kyshel */
+.form_inline{
+	display: inline-block;
+    margin-bottom: 0;
+    vertical-align: middle;
+}
+
+.form_inline .form-control{
+	display: inline-block;
+    margin-bottom: 0;
+    vertical-align: middle;
+    width: auto;
+}
+
 
 
 

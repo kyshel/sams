@@ -51,6 +51,17 @@ function check_phpversion_for_hash(){
 	}
 }
 
+function check_permission($array_power){	
+	$php_self=php_self();
+
+	if (in_array(basename($php_self, ".php"), $array_power)) {
+		return ;
+	}else{
+		die('<h1>你没有权限查看此页</h1>');
+	}
+
+}
+
 // generate a select course list that belong to logined teacher
 function teacher_get_own_course($tea_id){
 	global $db;
@@ -126,7 +137,7 @@ function echoMyCourseSelect($tea_id){
 function echoProSelect(){
 	global $db;
 	$course_id=NULL;
-	echo '<select name="pro_id" required  id="course_list">';
+	echo '<select name="pro_id" required  id="course_list" class="form-control">';
 
 	$sql="SELECT *
 	from project";
@@ -167,7 +178,7 @@ function echoClassSelect(){
 	if ($result->num_rows == 0) {
 		echoRed('no result');
     } else {
-    	echo '<select name="str_class"  id="course_list">';
+    	echo '<select name="str_class"  id="course_list" class="form-control">';
 		while($row = $result->fetch_array(MYSQLI_ASSOC)){		
 			echo "<option value='"
 			.$row['stu_major']."-"
@@ -225,23 +236,24 @@ function makeSelectForPro(){
 }
 
 function echoFormForStatic($type){
-echo '<div class="well0 well-sm0">';
+echo '<div class="panel-body">';
 echo '<form id="form_'.$type.'" method="post" action="'.php_self().'?type='.$type.'">';
+echo '<div class="form_inline">';
 switch ($type) {
 	case 'class':
-		echo '<div class="panel-heading0">选择班级:</div>';
+		echo '<span>选择班级: </span>';
 		echoClassSelect();
 		break;
 
 	case 'pro':		
-		echo '<div class="panel-heading0">选择课程:</div>';
+		echo '<span>选择课程: </span>';
 		echoProSelect();			
 		break;
 
 	case 'stu':		
-		echo '<div class="panel-heading0">输入学号:</div>';
+		echo '<span>输入学号: </span>';
 		$data_error='';
-		echoInput('stu_id','1423050104','text',1,0,'form-control0','maxlength="10" pattern="\d{10}" data-error="'.$data_error.'" ');	
+		echoInput('stu_id','1423050104','text',1,0,'form-control','maxlength="10" pattern="\d{10}" data-error="'.$data_error.'" ');	
 		break;
 	
 	default:
@@ -249,7 +261,7 @@ switch ($type) {
 		break;
 }
 echoInput('type',$type,'text',1,1);	
-echo '<button type="submit" name="form_submit">提交</button></form>';
+echo '&nbsp;<button type="submit" name="form_submit" class="form-control">提交</button></div></form>';
 echo '</div>';//panel
 }
 
@@ -324,10 +336,14 @@ function echoRequireLib(){
 		echo '
 		<script src="js/d3.v4.min.js"></script>
 		'; 
-	}elseif ($php_self == 'render_static.php' ) {
+	}elseif ($php_self == 'a.php' ) {
+		echo ''; 		
+	}elseif ($php_self == 'index.php') {
 		echo '
-		<link href="css/viewer.css" rel="stylesheet">
-		'; 		
+		<link rel="stylesheet" type="text/css" href="css/github-markdown.min.css">
+		<script src="js/showdown.min.js"></script>
+		'; 	
+		
 	}
 }
 
@@ -672,17 +688,48 @@ function getTableColumnName($table_name){
 
 }
 
-
-function showMenuAccordUserRole(){
+function getArrayPower(){
 	$user_role=$_SESSION['user_role'];
+	$user_name=$_SESSION['user_name'];
 
-	if ($user_role == 'admin') {
+	$basic=array('add_main','show_at','set_student','ajax','add_result');
+
+	if ($user_name == 'cs') {
+		$power=array('index','show_result','pretty_result');
+	}
+	elseif ($user_role == 'admin') {
+		$power_admin=array('index','manage_stu','manage_tea','manage_course','manage_pro','show_static','show_result','pretty_result',);
+		$power = array_merge($power_admin, $basic);	
+
+	}elseif($user_role == 'teacher'){
+		$power_tea=array('index','manage_pro','set_password',);
+		$power = array_merge($power_tea, $basic);
+
+	}elseif($user_role == 'tea_first'){
+		$power=array('index','set_password');
+	}
+
+	return $power;
+}
+
+
+function showMenuAccordUser(){
+
+	$user_role=$_SESSION['user_role'];
+	$user_name=$_SESSION['user_name'];
+
+	if ($user_name == 'cs') {
+		$array_menu=array('index','show_result');
+		//header("Location: pretty_result.php");
+	}
+	elseif ($user_role == 'admin') {
 		$array_menu=array('index','manage_stu','manage_tea','manage_course','manage_pro','show_static','show_result');
 	}elseif($user_role == 'teacher'){
 		$array_menu=array('index','manage_pro','set_password');
 	}elseif($user_role == 'tea_first'){
 		$array_menu=array('set_password');
 	}
+
 
 	// echo menu
 	foreach ($array_menu as $index => $page_name) {
@@ -2786,7 +2833,7 @@ function echoStaticStu($stu_id){
 	$php_self=php_self();
 
 	$array_stu=getArrayFromEntry('student','stu_id',$stu_id);
-	$tip='该生姓名'.s($array_stu['stu_name']).'，性别'.s($array_stu['stu_sex']).'，年级'.s($array_stu['stu_grade']).'，学院'.s($array_stu['stu_dep']).'，专业'.s($array_stu['stu_major']).'，班级'.s($array_stu['stu_class']);
+	$tip='学号'.s($stu_id).'，姓名'.s($array_stu['stu_name']).'，性别'.s($array_stu['stu_sex']).'，年级'.s($array_stu['stu_grade']).'，学院'.s($array_stu['stu_dep']).'，专业'.s($array_stu['stu_major']).'，班级'.s($array_stu['stu_class']);
 	echoDiv($tip,'well');
 
 	if (!isStuHasPro($stu_id)) {
@@ -3089,7 +3136,7 @@ function getStaticJson(){
 			} else {
 				while($row2 = $result2->fetch_array(MYSQLI_ASSOC)){
 					$attend[] = array(
-						'记录编号' => $row2['at_id'],
+						// '记录编号' => $row2['at_id'],
 						'学号' => $row2['stu_id'],
 						'姓名' => getStuName($row2['stu_id']),
 						'缺勤次数' => $row2['no_sum']
@@ -3124,7 +3171,7 @@ function getStaticJson(){
 
 
 			$project[] = array(
-				'考勤编号' => $row['pro_id'], 
+				'编号' => $row['pro_id'], 
 				'学年' => $row['year'],
 				'学期' => $row['term'],
 				'课程编号' => $row['course_id'],

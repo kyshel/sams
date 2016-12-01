@@ -19,7 +19,7 @@ define("DB_PASS", "123");
 /**
  * dev mode
  */
-define("DEV_MODE",1);
+define("DEV_MODE",0);
 
 /**
  * LANG  see data.json
@@ -27,3 +27,5 @@ define("DEV_MODE",1);
  * 1 cn 
  */
 define("LANG",1);
+
+date_default_timezone_set('Asia/Shanghai');

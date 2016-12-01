@@ -54,7 +54,7 @@ fclose($fp);
 
 				<ul class="nav navbar-nav navbar-right">
 				<form class="navbar-form navbar-left">
-					<button class="btn btn-info" onclick="json2xls()">导出.xls文件</button>
+					<button class="btn btn-info" onclick="json2xls()"><i class="glyphicon glyphicon-export icon-share"></i> 导出</button>
 				</form>					
 
 				</ul>		

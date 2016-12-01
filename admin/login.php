@@ -61,7 +61,7 @@ if ($login->isUserLoggedIn() == false) {
 	</div>
 	<br>
 	<button class="btn btn-lg btn-primary btn-block" name="login" type="submit">登录</button>
-	<a class="btn btn-lg btn-success btn-block" href="//kyshel.github.io/sams-doc/">查看帮助文档</a>
+	<a class="btn btn-lg btn-success btn-block" href="//kyshel.github.io/sams-help/">查看帮助文档</a>
 	<?php
 	echo '<input type="hidden" name="redirect_to" value="';
 	if(isset($_GET['redirect_to'])) {

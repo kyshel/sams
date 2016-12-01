@@ -8,9 +8,7 @@ session_start();
 exec_kickout_if_timeout();
 exec_login_if_not();
 
-date_default_timezone_set('Asia/Shanghai');
-
-
+check_permission(getArrayPower());
 
 
 ?>
